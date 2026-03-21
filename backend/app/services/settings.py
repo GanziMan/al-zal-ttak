@@ -1,4 +1,6 @@
 """사용자 설정 관리 (JSON 파일)"""
+from __future__ import annotations
+
 import json
 from pathlib import Path
 

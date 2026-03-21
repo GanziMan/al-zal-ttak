@@ -1,4 +1,6 @@
 """관심 종목 공시 필터링"""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 
 from app.services.dart_client import DartClient

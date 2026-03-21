@@ -1,4 +1,6 @@
 """공시 피드 API"""
+from __future__ import annotations
+
 import asyncio
 
 from fastapi import APIRouter, Query

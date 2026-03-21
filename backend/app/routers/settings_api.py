@@ -1,4 +1,6 @@
 """설정 API"""
+from typing import List, Optional
+
 from fastapi import APIRouter
 from pydantic import BaseModel
 
@@ -8,11 +10,11 @@ router = APIRouter()
 
 
 class UpdateSettingsRequest(BaseModel):
-    telegram_enabled: bool | None = None
-    telegram_chat_id: str | None = None
-    min_importance_score: int | None = None
-    alert_categories: list[str] | None = None
-    disclosure_days: int | None = None
+    telegram_enabled: Optional[bool] = None
+    telegram_chat_id: Optional[str] = None
+    min_importance_score: Optional[int] = None
+    alert_categories: Optional[List[str]] = None
+    disclosure_days: Optional[int] = None
 
 
 @router.get("")

@@ -1,4 +1,6 @@
 """기업 검색 API"""
+from __future__ import annotations
+
 from fastapi import APIRouter, Query
 
 from app.services.corp_code_loader import search_corps

@@ -1,4 +1,6 @@
 """관심 종목 관리 (JSON 파일 기반, 추후 DB 전환)"""
+from __future__ import annotations
+
 import json
 from pathlib import Path
 

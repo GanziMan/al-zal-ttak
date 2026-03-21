@@ -1,4 +1,6 @@
 """대시보드 집계 API"""
+from __future__ import annotations
+
 from fastapi import APIRouter
 
 from app.config import settings

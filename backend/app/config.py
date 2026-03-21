@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     telegram_chat_id: str = ""
     database_url: str = "sqlite+aiosqlite:///./al_zal_ttak.db"
 
-    model_config = {"env_file": ".env"}
+    model_config = {"env_file": ".env", "extra": "ignore"}
 
 
 settings = Settings()

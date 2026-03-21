@@ -1,4 +1,6 @@
 """AI 분석 결과 캐싱 (rcept_no 기준, JSON 파일)"""
+from __future__ import annotations
+
 import json
 from pathlib import Path
 
