@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { WatchlistItem } from "@/lib/api";
 
@@ -43,9 +44,12 @@ export function WatchlistTable({ items, onRemove }: WatchlistTableProps) {
           key={item.corp_code}
           className="group grid grid-cols-[1fr_100px_100px_80px] gap-4 items-center border-b border-border last:border-0 px-4 py-3 hover:bg-accent/30 transition-colors"
         >
-          <span className="text-[13px] font-semibold text-foreground group-hover:text-primary transition-colors">
+          <Link
+            href={`/disclosures?corp_code=${item.corp_code}`}
+            className="text-[13px] font-semibold text-foreground group-hover:text-primary hover:underline transition-colors"
+          >
             {item.corp_name}
-          </span>
+          </Link>
           <span className="text-[11px] text-primary/70">
             {item.stock_code}
           </span>

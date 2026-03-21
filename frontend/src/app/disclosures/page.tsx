@@ -1,18 +1,43 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { DisclosureFilters } from "@/components/disclosure-filters";
 import { DisclosureCard } from "@/components/disclosure-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, Disclosure } from "@/lib/api";
 
-export default function DisclosuresPage() {
+function DisclosuresContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const corpCode = searchParams.get("corp_code");
+
   const [disclosures, setDisclosures] = useState<Disclosure[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [category, setCategory] = useState("all");
   const [days, setDays] = useState(7);
   const [minScore, setMinScore] = useState(0);
+
+  const clearCorpFilter = useCallback(() => {
+    router.replace("/disclosures");
+  }, [router]);
+
+  const handleCategoryChange = useCallback((v: string) => {
+    setCategory(v);
+    if (corpCode) clearCorpFilter();
+  }, [corpCode, clearCorpFilter]);
+
+  const handleDaysChange = useCallback((v: number) => {
+    setDays(v);
+    if (corpCode) clearCorpFilter();
+  }, [corpCode, clearCorpFilter]);
+
+  const handleMinScoreChange = useCallback((v: number) => {
+    setMinScore(v);
+    if (corpCode) clearCorpFilter();
+  }, [corpCode, clearCorpFilter]);
 
   const fetchDisclosures = useCallback(async () => {
     setLoading(true);
@@ -35,22 +60,50 @@ export default function DisclosuresPage() {
     fetchDisclosures();
   }, [fetchDisclosures]);
 
+  const filtered = corpCode
+    ? disclosures.filter((d) => d.corp_code === corpCode)
+    : disclosures;
+
+  // corp_name을 전체 목록에서 먼저 찾아서 필터 결과가 0건이어도 이름 표시
+  const corpName = corpCode
+    ? disclosures.find((d) => d.corp_code === corpCode)?.corp_name ?? null
+    : null;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold tracking-tight">공시</h1>
-          <p className="text-[12px] text-muted-foreground mt-0.5">
-            관심종목의 AI 분석 공시
-          </p>
+          {corpCode ? (
+            <>
+              <Link
+                href="/disclosures"
+                className="text-[12px] text-primary hover:underline"
+              >
+                &larr; 전체 공시
+              </Link>
+              <h1 className="text-xl font-bold tracking-tight mt-1">
+                {corpName ?? corpCode} 공시
+              </h1>
+              <p className="text-[12px] text-muted-foreground mt-0.5">
+                해당 종목의 AI 분석 공시
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 className="text-xl font-bold tracking-tight">공시</h1>
+              <p className="text-[12px] text-muted-foreground mt-0.5">
+                관심종목의 AI 분석 공시
+              </p>
+            </>
+          )}
         </div>
         <DisclosureFilters
           category={category}
           days={days}
           minScore={minScore}
-          onCategoryChange={setCategory}
-          onDaysChange={setDays}
-          onMinScoreChange={setMinScore}
+          onCategoryChange={handleCategoryChange}
+          onDaysChange={handleDaysChange}
+          onMinScoreChange={handleMinScoreChange}
         />
       </div>
 
@@ -65,25 +118,51 @@ export default function DisclosuresPage() {
           Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-28 rounded-xl" />
           ))
-        ) : disclosures.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border py-16 text-center">
-            <p className="text-sm text-muted-foreground">공시가 없습니다</p>
+            <p className="text-sm text-muted-foreground">
+              {corpCode ? "해당 종목의 공시가 없습니다" : "공시가 없습니다"}
+            </p>
             <p className="mt-1.5 text-[11px] text-muted-foreground/60">
-              관심종목을 추가하거나 필터를 조정하세요
+              {corpCode
+                ? "기간이나 필터를 조정해 보세요"
+                : "관심종목을 추가하거나 필터를 조정하세요"}
             </p>
           </div>
         ) : (
-          disclosures.map((d) => (
+          filtered.map((d) => (
             <DisclosureCard key={d.rcept_no} disclosure={d} />
           ))
         )}
       </div>
 
-      {!loading && disclosures.length > 0 && (
+      {!loading && filtered.length > 0 && (
         <p className="text-center text-[11px] text-muted-foreground/50">
-          총 {disclosures.length}건
+          총 {filtered.length}건
         </p>
       )}
     </div>
+  );
+}
+
+export default function DisclosuresPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="space-y-6">
+          <div>
+            <div className="h-7 w-20 bg-muted rounded animate-pulse" />
+            <div className="h-4 w-40 bg-muted rounded animate-pulse mt-1" />
+          </div>
+          <div className="space-y-2.5">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-28 rounded-xl" />
+            ))}
+          </div>
+        </div>
+      }
+    >
+      <DisclosuresContent />
+    </Suspense>
   );
 }

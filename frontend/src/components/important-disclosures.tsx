@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Disclosure } from "@/lib/api";
 import { categoryColor, categoryDot, formatDateShort, scoreColor } from "@/lib/disclosure-utils";
@@ -29,7 +30,7 @@ export function ImportantDisclosures({ disclosures }: ImportantDisclosuresProps)
             const cat = d.analysis?.category || "단순정보";
             const score = d.analysis?.importance_score ?? 0;
             return (
-              <div key={d.rcept_no} className="group px-4 py-3 hover:bg-accent/50 transition-colors">
+              <Link key={d.rcept_no} href={`/disclosures?corp_code=${d.corp_code}`} className="block group px-4 py-3 hover:bg-accent/50 transition-colors">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1">
@@ -59,7 +60,7 @@ export function ImportantDisclosures({ disclosures }: ImportantDisclosuresProps)
                     </Badge>
                   </div>
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>
@@ -91,8 +92,9 @@ export function RecentTimeline({ disclosures }: RecentTimelineProps) {
       ) : (
         <div className="divide-y divide-border">
           {disclosures.map((d) => (
-            <div
+            <Link
               key={d.rcept_no}
+              href={`/disclosures?corp_code=${d.corp_code}`}
               className="group flex items-center gap-3 px-4 py-2.5 hover:bg-accent/50 transition-colors"
             >
               <span className="shrink-0 text-[10px] text-muted-foreground/50 tabular-nums">
@@ -104,7 +106,7 @@ export function RecentTimeline({ disclosures }: RecentTimelineProps) {
               <span className="truncate text-[12px] text-muted-foreground/60 group-hover:text-muted-foreground transition-colors">
                 {d.report_nm}
               </span>
-            </div>
+            </Link>
           ))}
         </div>
       )}
