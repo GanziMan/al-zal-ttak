@@ -26,42 +26,45 @@ export function DisclosureFilters({
   onMinScoreChange,
 }: DisclosureFiltersProps) {
   return (
-    <div className="flex flex-wrap gap-3">
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mr-1">
+        Filter
+      </span>
       <Select value={category} onValueChange={(v) => v && onCategoryChange(v)}>
-        <SelectTrigger className="w-[140px]">
-          <SelectValue placeholder="카테고리" />
+        <SelectTrigger className="h-8 w-[130px] text-xs bg-card border-border/50">
+          <SelectValue placeholder="Category" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">전체</SelectItem>
-          <SelectItem value="호재">호재</SelectItem>
-          <SelectItem value="악재">악재</SelectItem>
-          <SelectItem value="중립">중립</SelectItem>
-          <SelectItem value="단순정보">단순정보</SelectItem>
+          <SelectItem value="all">All Categories</SelectItem>
+          <SelectItem value="호재">Bullish</SelectItem>
+          <SelectItem value="악재">Bearish</SelectItem>
+          <SelectItem value="중립">Neutral</SelectItem>
+          <SelectItem value="단순정보">Info</SelectItem>
         </SelectContent>
       </Select>
 
       <Select value={String(days)} onValueChange={(v) => v && onDaysChange(Number(v))}>
-        <SelectTrigger className="w-[120px]">
-          <SelectValue placeholder="기간" />
+        <SelectTrigger className="h-8 w-[100px] text-xs bg-card border-border/50">
+          <SelectValue placeholder="Period" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="1">1일</SelectItem>
-          <SelectItem value="3">3일</SelectItem>
-          <SelectItem value="7">7일</SelectItem>
-          <SelectItem value="14">14일</SelectItem>
-          <SelectItem value="30">30일</SelectItem>
+          <SelectItem value="1">1 Day</SelectItem>
+          <SelectItem value="3">3 Days</SelectItem>
+          <SelectItem value="7">7 Days</SelectItem>
+          <SelectItem value="14">14 Days</SelectItem>
+          <SelectItem value="30">30 Days</SelectItem>
         </SelectContent>
       </Select>
 
       <Select value={String(minScore)} onValueChange={(v) => v && onMinScoreChange(Number(v))}>
-        <SelectTrigger className="w-[140px]">
-          <SelectValue placeholder="중요도" />
+        <SelectTrigger className="h-8 w-[120px] text-xs bg-card border-border/50">
+          <SelectValue placeholder="Score" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="0">전체 중요도</SelectItem>
-          <SelectItem value="20">20점 이상</SelectItem>
-          <SelectItem value="50">50점 이상</SelectItem>
-          <SelectItem value="80">80점 이상</SelectItem>
+          <SelectItem value="0">All Scores</SelectItem>
+          <SelectItem value="20">Score 20+</SelectItem>
+          <SelectItem value="50">Score 50+</SelectItem>
+          <SelectItem value="80">Score 80+</SelectItem>
         </SelectContent>
       </Select>
     </div>

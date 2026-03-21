@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { StockSearch } from "@/components/stock-search";
 import { WatchlistTable } from "@/components/watchlist-table";
 import { api, Corp, WatchlistItem } from "@/lib/api";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function WatchlistPage() {
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
@@ -16,7 +17,7 @@ export default function WatchlistPage() {
       setWatchlist(data.watchlist);
       setError("");
     } catch {
-      setError("관심종목을 불러올 수 없습니다. 백엔드 서버를 확인하세요.");
+      setError("Unable to load watchlist. Check backend server.");
     } finally {
       setLoading(false);
     }
@@ -35,7 +36,7 @@ export default function WatchlistPage() {
       });
       setWatchlist(data.watchlist);
     } catch {
-      setError("종목 추가에 실패했습니다.");
+      setError("Failed to add stock.");
     }
   }
 
@@ -44,31 +45,29 @@ export default function WatchlistPage() {
       const data = await api.removeFromWatchlist(corpCode);
       setWatchlist(data.watchlist);
     } catch {
-      setError("종목 삭제에 실패했습니다.");
+      setError("Failed to remove stock.");
     }
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-bold">관심종목</h1>
-        <p className="text-sm text-muted-foreground">
-          관심있는 종목을 추가하고 관리하세요
+        <h1 className="text-lg font-bold tracking-tight">Watchlist</h1>
+        <p className="text-xs text-muted-foreground">
+          Track and manage your stocks
         </p>
       </div>
 
       <StockSearch onSelect={handleAdd} />
 
       {error && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs text-red-400">
           {error}
         </div>
       )}
 
       {loading ? (
-        <div className="py-12 text-center text-muted-foreground">
-          로딩중...
-        </div>
+        <Skeleton className="h-48 rounded-lg" />
       ) : (
         <WatchlistTable items={watchlist} onRemove={handleRemove} />
       )}

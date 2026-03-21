@@ -20,7 +20,7 @@ export default function DashboardPage() {
         const summary = await api.getDashboardSummary();
         setData(summary);
       } catch {
-        setError("대시보드 데이터를 불러올 수 없습니다. 백엔드 서버를 확인하세요.");
+        setError("Unable to load dashboard data. Check backend server.");
       } finally {
         setLoading(false);
       }
@@ -30,24 +30,33 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold">대시보드</h1>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="space-y-5">
+        <div>
+          <h1 className="text-lg font-bold tracking-tight">Dashboard</h1>
+          <p className="text-xs text-muted-foreground">Market disclosure overview</p>
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-24 rounded-lg" />
           ))}
         </div>
-        <Skeleton className="h-48 rounded-lg" />
+        <div className="grid gap-5 lg:grid-cols-2">
+          <Skeleton className="h-64 rounded-lg" />
+          <Skeleton className="h-64 rounded-lg" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">대시보드</h1>
+    <div className="space-y-5">
+      <div>
+        <h1 className="text-lg font-bold tracking-tight">Dashboard</h1>
+        <p className="text-xs text-muted-foreground">Market disclosure overview</p>
+      </div>
 
       {error && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs text-red-400">
           {error}
         </div>
       )}
@@ -59,7 +68,7 @@ export default function DashboardPage() {
         bearish={data?.bearish ?? 0}
       />
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-5 lg:grid-cols-2">
         <ImportantDisclosures
           disclosures={data?.important_disclosures ?? []}
         />

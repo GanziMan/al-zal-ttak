@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -15,8 +14,15 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { api, AppSettings } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 const ALL_CATEGORIES = ["호재", "악재", "중립", "단순정보"];
+const CATEGORY_EN: Record<string, string> = {
+  호재: "Bullish",
+  악재: "Bearish",
+  중립: "Neutral",
+  단순정보: "Info",
+};
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<AppSettings | null>(null);
@@ -31,7 +37,7 @@ export default function SettingsPage() {
         const data = await api.getSettings();
         setSettings(data);
       } catch {
-        setError("설정을 불러올 수 없습니다. 백엔드 서버를 확인하세요.");
+        setError("Unable to load settings. Check backend server.");
       } finally {
         setLoading(false);
       }
@@ -49,7 +55,7 @@ export default function SettingsPage() {
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch {
-      setError("설정 저장에 실패했습니다.");
+      setError("Failed to save settings.");
     } finally {
       setSaving(false);
     }
@@ -65,29 +71,34 @@ export default function SettingsPage() {
 
   if (loading || !settings) {
     return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold">설정</h1>
-        <p className="text-muted-foreground">로딩중...</p>
+      <div className="space-y-5">
+        <div>
+          <h1 className="text-lg font-bold tracking-tight">Settings</h1>
+          <p className="text-xs text-muted-foreground">Loading...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 max-w-2xl">
       <div>
-        <h1 className="text-2xl font-bold">설정</h1>
-        <p className="text-sm text-muted-foreground">
-          알림과 필터링 설정을 관리하세요
+        <h1 className="text-lg font-bold tracking-tight">Settings</h1>
+        <p className="text-xs text-muted-foreground">
+          Configure notifications and filters
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">텔레그램 알림</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      {/* Telegram Section */}
+      <div className="rounded-lg border border-border/50 bg-card">
+        <div className="border-b border-border/50 px-4 py-3">
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            Telegram Notifications
+          </h2>
+        </div>
+        <div className="p-4 space-y-4">
           <div className="flex items-center justify-between">
-            <Label htmlFor="telegram-toggle">알림 활성화</Label>
+            <Label htmlFor="telegram-toggle" className="text-sm">Enable notifications</Label>
             <Switch
               id="telegram-toggle"
               checked={settings.telegram_enabled}
@@ -96,104 +107,113 @@ export default function SettingsPage() {
               }
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="chat-id">텔레그램 Chat ID</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="chat-id" className="text-xs text-muted-foreground">Chat ID</Label>
             <Input
               id="chat-id"
               value={settings.telegram_chat_id}
               onChange={(e) =>
                 setSettings({ ...settings, telegram_chat_id: e.target.value })
               }
-              placeholder="텔레그램 Chat ID를 입력하세요"
+              placeholder="Enter Telegram Chat ID"
+              className="h-9 bg-muted/30 border-border/50 text-sm font-mono"
             />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">알림 필터</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      {/* Alert Filters Section */}
+      <div className="rounded-lg border border-border/50 bg-card">
+        <div className="border-b border-border/50 px-4 py-3">
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            Alert Filters
+          </h2>
+        </div>
+        <div className="p-4 space-y-5">
           <div className="space-y-2">
-            <Label>알림 카테고리</Label>
+            <Label className="text-xs text-muted-foreground">Alert categories</Label>
             <div className="flex flex-wrap gap-2">
-              {ALL_CATEGORIES.map((cat) => (
-                <Badge
-                  key={cat}
-                  variant={
-                    settings.alert_categories.includes(cat)
-                      ? "default"
-                      : "outline"
-                  }
-                  className="cursor-pointer"
-                  onClick={() => toggleCategory(cat)}
-                >
-                  {cat}
-                </Badge>
-              ))}
+              {ALL_CATEGORIES.map((cat) => {
+                const active = settings.alert_categories.includes(cat);
+                return (
+                  <Badge
+                    key={cat}
+                    variant="outline"
+                    className={cn(
+                      "cursor-pointer transition-colors text-xs",
+                      active
+                        ? "bg-primary/20 text-primary border-primary/30"
+                        : "text-muted-foreground border-border/50 hover:border-border"
+                    )}
+                    onClick={() => toggleCategory(cat)}
+                  >
+                    {CATEGORY_EN[cat]} ({cat})
+                  </Badge>
+                );
+              })}
             </div>
-            <p className="text-xs text-muted-foreground">
-              선택한 카테고리의 공시만 알림을 받습니다
-            </p>
           </div>
 
-          <div className="space-y-2">
-            <Label>최소 중요도 점수</Label>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Minimum importance score</Label>
             <Select
               value={String(settings.min_importance_score)}
               onValueChange={(v) =>
                 v && setSettings({ ...settings, min_importance_score: Number(v) })
               }
             >
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="h-9 w-[160px] text-sm bg-muted/30 border-border/50">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="0">전체 (0점 이상)</SelectItem>
-                <SelectItem value="20">20점 이상</SelectItem>
-                <SelectItem value="30">30점 이상</SelectItem>
-                <SelectItem value="50">50점 이상</SelectItem>
-                <SelectItem value="80">80점 이상</SelectItem>
+                <SelectItem value="0">All (0+)</SelectItem>
+                <SelectItem value="20">Score 20+</SelectItem>
+                <SelectItem value="30">Score 30+</SelectItem>
+                <SelectItem value="50">Score 50+</SelectItem>
+                <SelectItem value="80">Score 80+</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label>공시 조회 기간</Label>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Disclosure lookback period</Label>
             <Select
               value={String(settings.disclosure_days)}
               onValueChange={(v) =>
                 v && setSettings({ ...settings, disclosure_days: Number(v) })
               }
             >
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="h-9 w-[160px] text-sm bg-muted/30 border-border/50">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">1일</SelectItem>
-                <SelectItem value="3">3일</SelectItem>
-                <SelectItem value="7">7일</SelectItem>
-                <SelectItem value="14">14일</SelectItem>
-                <SelectItem value="30">30일</SelectItem>
+                <SelectItem value="1">1 Day</SelectItem>
+                <SelectItem value="3">3 Days</SelectItem>
+                <SelectItem value="7">7 Days</SelectItem>
+                <SelectItem value="14">14 Days</SelectItem>
+                <SelectItem value="30">30 Days</SelectItem>
               </SelectContent>
             </Select>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {error && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs text-red-400">
           {error}
         </div>
       )}
 
       <div className="flex items-center gap-3">
-        <Button onClick={handleSave} disabled={saving}>
-          {saving ? "저장중..." : "설정 저장"}
+        <Button
+          onClick={handleSave}
+          disabled={saving}
+          className="h-9 text-xs uppercase tracking-wider"
+        >
+          {saving ? "Saving..." : "Save Settings"}
         </Button>
         {saved && (
-          <span className="text-sm text-green-600">저장되었습니다</span>
+          <span className="text-xs text-emerald-400">Saved successfully</span>
         )}
       </div>
     </div>

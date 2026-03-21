@@ -1,14 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { WatchlistItem } from "@/lib/api";
 
 interface WatchlistTableProps {
@@ -19,50 +11,64 @@ interface WatchlistTableProps {
 export function WatchlistTable({ items, onRemove }: WatchlistTableProps) {
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-12 text-center">
-        <p className="text-lg font-medium text-muted-foreground">
-          관심종목이 없습니다
-        </p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          위 검색창에서 종목을 검색하여 추가하세요
+      <div className="rounded-lg border border-dashed border-border/50 py-16 text-center">
+        <p className="text-sm text-muted-foreground">No stocks in watchlist</p>
+        <p className="mt-1 text-xs text-muted-foreground/70">
+          Search above to add stocks
         </p>
       </div>
     );
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>종목명</TableHead>
-          <TableHead>종목코드</TableHead>
-          <TableHead>기업코드</TableHead>
-          <TableHead className="w-24 text-right">관리</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {items.map((item) => (
-          <TableRow key={item.corp_code}>
-            <TableCell className="font-medium">{item.corp_name}</TableCell>
-            <TableCell className="text-muted-foreground">
-              {item.stock_code}
-            </TableCell>
-            <TableCell className="text-muted-foreground">
-              {item.corp_code}
-            </TableCell>
-            <TableCell className="text-right">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-destructive hover:text-destructive"
-                onClick={() => onRemove(item.corp_code)}
-              >
-                삭제
-              </Button>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <div className="rounded-lg border border-border/50 bg-card overflow-hidden">
+      {/* Header */}
+      <div className="grid grid-cols-[1fr_100px_100px_80px] gap-4 border-b border-border/50 bg-muted/30 px-4 py-2">
+        <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          Name
+        </span>
+        <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          Ticker
+        </span>
+        <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          Corp Code
+        </span>
+        <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground text-right">
+          Action
+        </span>
+      </div>
+      {/* Rows */}
+      {items.map((item) => (
+        <div
+          key={item.corp_code}
+          className="grid grid-cols-[1fr_100px_100px_80px] gap-4 items-center border-b border-border/20 last:border-0 px-4 py-3 hover:bg-accent/20 transition-colors"
+        >
+          <span className="text-sm font-semibold text-foreground">
+            {item.corp_name}
+          </span>
+          <span className="font-mono text-xs text-primary">
+            {item.stock_code}
+          </span>
+          <span className="font-mono text-xs text-muted-foreground">
+            {item.corp_code}
+          </span>
+          <div className="text-right">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-[10px] uppercase tracking-wider text-destructive hover:text-destructive hover:bg-destructive/10"
+              onClick={() => onRemove(item.corp_code)}
+            >
+              Remove
+            </Button>
+          </div>
+        </div>
+      ))}
+      <div className="border-t border-border/50 bg-muted/20 px-4 py-2">
+        <span className="text-[10px] font-mono text-muted-foreground">
+          {items.length} stock{items.length !== 1 ? "s" : ""} tracked
+        </span>
+      </div>
+    </div>
   );
 }

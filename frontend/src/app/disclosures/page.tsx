@@ -25,7 +25,7 @@ export default function DisclosuresPage() {
       setDisclosures(data.disclosures);
       setError("");
     } catch {
-      setError("공시를 불러올 수 없습니다. 백엔드 서버를 확인하세요.");
+      setError("Unable to load disclosures. Check backend server.");
     } finally {
       setLoading(false);
     }
@@ -36,45 +36,40 @@ export default function DisclosuresPage() {
   }, [fetchDisclosures]);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">공시 피드</h1>
-        <p className="text-sm text-muted-foreground">
-          관심종목의 공시를 AI가 분석한 결과를 확인하세요
-        </p>
+    <div className="space-y-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-lg font-bold tracking-tight">Disclosures</h1>
+          <p className="text-xs text-muted-foreground">
+            AI-analyzed filings from your watchlist
+          </p>
+        </div>
+        <DisclosureFilters
+          category={category}
+          days={days}
+          minScore={minScore}
+          onCategoryChange={setCategory}
+          onDaysChange={setDays}
+          onMinScoreChange={setMinScore}
+        />
       </div>
 
-      <DisclosureFilters
-        category={category}
-        days={days}
-        minScore={minScore}
-        onCategoryChange={setCategory}
-        onDaysChange={setDays}
-        onMinScoreChange={setMinScore}
-      />
-
       {error && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs text-red-400">
           {error}
         </div>
       )}
 
-      <div className="space-y-3">
+      <div className="space-y-2">
         {loading ? (
-          Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="space-y-2 rounded-lg border p-4">
-              <Skeleton className="h-5 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-              <Skeleton className="h-4 w-full" />
-            </div>
+          Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 rounded-lg" />
           ))
         ) : disclosures.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-12 text-center">
-            <p className="text-lg font-medium text-muted-foreground">
-              공시가 없습니다
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              관심종목을 추가하거나 필터를 변경해보세요
+          <div className="rounded-lg border border-dashed border-border/50 py-16 text-center">
+            <p className="text-sm text-muted-foreground">No filings found</p>
+            <p className="mt-1 text-xs text-muted-foreground/70">
+              Add stocks to your watchlist or adjust filters
             </p>
           </div>
         ) : (
@@ -85,8 +80,8 @@ export default function DisclosuresPage() {
       </div>
 
       {!loading && disclosures.length > 0 && (
-        <p className="text-center text-sm text-muted-foreground">
-          총 {disclosures.length}건의 공시
+        <p className="text-center text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+          {disclosures.length} filing{disclosures.length !== 1 ? "s" : ""} total
         </p>
       )}
     </div>
