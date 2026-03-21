@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ALZALTTAK | AI Disclosure Intelligence",
-  description: "AI-powered Korean market disclosure analysis",
+  title: "알잘딱 | AI 공시 분석",
+  description: "AI 기반 한국 주식시장 공시 분석 서비스",
 };
 
 export default function RootLayout({
@@ -34,9 +34,9 @@ export default function RootLayout({
         <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-7xl">{children}</div>
         </main>
-        <footer className="border-t border-border/30 py-4 text-center">
-          <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground/50">
-            Alzalttak &middot; AI Disclosure Intelligence &middot; Powered by DART
+        <footer className="border-t border-border py-4 text-center">
+          <p className="text-[11px] text-muted-foreground/50">
+            알잘딱 &middot; AI 공시 분석 &middot; DART 기반
           </p>
         </footer>
       </body>

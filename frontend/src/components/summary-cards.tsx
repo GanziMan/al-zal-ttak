@@ -15,40 +15,32 @@ export function SummaryCards({
 }: SummaryCardsProps) {
   const cards = [
     {
-      label: "WATCHLIST",
+      label: "관심종목",
       value: watchlistCount,
-      sub: "stocks tracked",
+      sub: "추적 중인 종목",
       color: "text-primary",
-      glow: "glow-blue",
-      border: "border-primary/20",
-      icon: "◈",
+      border: "border-border",
     },
     {
-      label: "TODAY",
+      label: "오늘",
       value: todayDisclosures,
-      sub: "new filings",
+      sub: "신규 공시",
       color: "text-foreground",
-      glow: "",
-      border: "border-border/30",
-      icon: "◉",
+      border: "border-border",
     },
     {
-      label: "BULLISH",
+      label: "호재",
       value: bullish,
-      sub: "positive signals",
-      color: "text-emerald-400",
-      glow: "glow-green",
-      border: "border-emerald-500/20",
-      icon: "▲",
+      sub: "긍정 시그널",
+      color: "text-emerald-600",
+      border: "border-emerald-200",
     },
     {
-      label: "BEARISH",
+      label: "악재",
       value: bearish,
-      sub: "risk alerts",
-      color: "text-red-400",
-      glow: "glow-red",
-      border: "border-red-500/20",
-      icon: "▼",
+      sub: "위험 알림",
+      color: "text-red-600",
+      border: "border-red-200",
     },
   ];
 
@@ -57,15 +49,12 @@ export function SummaryCards({
       {cards.map((card) => (
         <div
           key={card.label}
-          className={`relative rounded-xl border ${card.border} card-gradient p-4 transition-all hover:scale-[1.02] ${card.glow}`}
+          className={`rounded-xl border ${card.border} bg-white card-elevated p-4 transition-all hover:shadow-md`}
         >
-          <div className="flex items-center justify-between">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-              {card.label}
-            </p>
-            <span className={`text-xs opacity-50 ${card.color}`}>{card.icon}</span>
-          </div>
-          <p className={`mt-2 text-3xl font-bold font-mono tabular-nums tracking-tight ${card.color}`}>
+          <p className="text-[11px] font-medium text-muted-foreground">
+            {card.label}
+          </p>
+          <p className={`mt-2 text-3xl font-bold tabular-nums tracking-tight ${card.color}`}>
             {card.value}
           </p>
           <p className="mt-0.5 text-[11px] text-muted-foreground/70">{card.sub}</p>

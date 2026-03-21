@@ -20,7 +20,7 @@ export default function DashboardPage() {
         const summary = await api.getDashboardSummary();
         setData(summary);
       } catch {
-        setError("Unable to load dashboard data. Check backend server.");
+        setError("대시보드 데이터를 불러올 수 없습니다. 백엔드 서버를 확인하세요.");
       } finally {
         setLoading(false);
       }
@@ -32,8 +32,8 @@ export default function DashboardPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-[12px] text-muted-foreground/60 mt-0.5">Real-time market disclosure intelligence</p>
+          <h1 className="text-xl font-bold tracking-tight">대시보드</h1>
+          <p className="text-[12px] text-muted-foreground mt-0.5">실시간 공시 분석 현황</p>
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -51,12 +51,12 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-[12px] text-muted-foreground/60 mt-0.5">Real-time market disclosure intelligence</p>
+        <h1 className="text-xl font-bold tracking-tight">대시보드</h1>
+        <p className="text-[12px] text-muted-foreground mt-0.5">실시간 공시 분석 현황</p>
       </div>
 
       {error && (
-        <div className="rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-[12px] text-red-400">
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[12px] text-red-700">
           {error}
         </div>
       )}

@@ -19,8 +19,8 @@ export function DisclosureCard({ disclosure }: DisclosureCardProps) {
   return (
     <article
       className={cn(
-        "rounded-xl border border-border/30 card-gradient border-l-[3px] transition-all hover:border-border/50",
-        categoryBorder[cat] || "border-l-zinc-600"
+        "rounded-xl border border-border bg-white card-elevated border-l-[3px] transition-all hover:shadow-md",
+        categoryBorder[cat] || "border-l-zinc-300"
       )}
     >
       <div className="px-4 py-3.5">
@@ -32,7 +32,7 @@ export function DisclosureCard({ disclosure }: DisclosureCardProps) {
               <span className="text-[11px] font-semibold text-foreground">
                 {disclosure.corp_name}
               </span>
-              <span className="text-[10px] font-mono text-muted-foreground/50 tabular-nums">
+              <span className="text-[10px] text-muted-foreground/50 tabular-nums">
                 {formatDate(disclosure.rcept_dt)}
               </span>
             </div>
@@ -45,7 +45,7 @@ export function DisclosureCard({ disclosure }: DisclosureCardProps) {
               <Badge variant="outline" className={cn("text-[10px] font-medium rounded-md", categoryColor[cat])}>
                 {cat}
               </Badge>
-              <span className={cn("text-lg font-mono font-bold tabular-nums tracking-tighter", scoreColor(score))}>
+              <span className={cn("text-lg font-bold tabular-nums tracking-tighter", scoreColor(score))}>
                 {score}
               </span>
             </div>
@@ -61,9 +61,9 @@ export function DisclosureCard({ disclosure }: DisclosureCardProps) {
 
             {/* Expandable AI summary */}
             {expanded && (
-              <div className="mt-3 rounded-lg border border-border/30 bg-muted/20 p-3.5">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-primary/60 mb-2">
-                  AI Analysis
+              <div className="mt-3 rounded-lg border border-border bg-accent/30 p-3.5">
+                <p className="text-[11px] font-semibold text-primary/70 mb-2">
+                  AI 분석 요약
                 </p>
                 <p className="text-[12px] leading-relaxed text-foreground/75 whitespace-pre-wrap">
                   {analysis.summary}
@@ -72,10 +72,10 @@ export function DisclosureCard({ disclosure }: DisclosureCardProps) {
             )}
 
             <button
-              className="mt-2.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-primary/70 hover:text-primary transition-colors"
+              className="mt-2.5 text-[11px] font-semibold text-primary/70 hover:text-primary transition-colors"
               onClick={() => setExpanded(!expanded)}
             >
-              {expanded ? "▴ Collapse" : "▾ View Analysis"}
+              {expanded ? "분석 숨기기" : "분석 보기"}
             </button>
           </div>
         )}

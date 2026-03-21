@@ -11,30 +11,30 @@ interface ImportantDisclosuresProps {
 
 export function ImportantDisclosures({ disclosures }: ImportantDisclosuresProps) {
   return (
-    <div className="rounded-xl border border-border/30 card-gradient overflow-hidden">
-      <div className="border-b border-border/30 px-4 py-3 flex items-center gap-2">
-        <div className="h-2 w-2 rounded-full bg-red-400 animate-pulse" />
-        <h2 className="text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-          High Priority
+    <div className="rounded-xl border border-border bg-white card-elevated overflow-hidden">
+      <div className="border-b border-border px-4 py-3 flex items-center gap-2">
+        <div className="h-2 w-2 rounded-full bg-red-500" />
+        <h2 className="text-[12px] font-semibold text-muted-foreground">
+          주요 공시
         </h2>
       </div>
       {disclosures.length === 0 ? (
         <div className="px-4 py-12 text-center">
-          <p className="text-sm text-muted-foreground/60">No high-priority filings detected</p>
-          <p className="mt-1 text-[11px] text-muted-foreground/40">Alerts will appear here when found</p>
+          <p className="text-sm text-muted-foreground">주요 공시가 없습니다</p>
+          <p className="mt-1 text-[11px] text-muted-foreground/60">중요 공시 발견 시 이곳에 표시됩니다</p>
         </div>
       ) : (
-        <div className="divide-y divide-border/20">
+        <div className="divide-y divide-border">
           {disclosures.map((d) => {
             const cat = d.analysis?.category || "단순정보";
             const score = d.analysis?.importance_score ?? 0;
             return (
-              <div key={d.rcept_no} className="group px-4 py-3 hover:bg-accent/20 transition-all">
+              <div key={d.rcept_no} className="group px-4 py-3 hover:bg-accent/50 transition-colors">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <div className={cn("h-1.5 w-1.5 rounded-full shrink-0", categoryDot[cat])} />
-                      <span className="text-[10px] font-mono text-muted-foreground/60 tabular-nums">
+                      <span className="text-[10px] text-muted-foreground tabular-nums">
                         {formatDateShort(d.rcept_dt)}
                       </span>
                       <span className="text-[11px] font-semibold text-foreground">
@@ -51,7 +51,7 @@ export function ImportantDisclosures({ disclosures }: ImportantDisclosuresProps)
                     )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className={cn("text-xs font-mono font-bold tabular-nums", scoreColor(score))}>
+                    <span className={cn("text-xs font-bold tabular-nums", scoreColor(score))}>
                       {score}
                     </span>
                     <Badge variant="outline" className={cn("text-[10px] rounded-md", categoryColor[cat])}>
@@ -74,28 +74,28 @@ interface RecentTimelineProps {
 
 export function RecentTimeline({ disclosures }: RecentTimelineProps) {
   return (
-    <div className="rounded-xl border border-border/30 card-gradient overflow-hidden">
-      <div className="border-b border-border/30 px-4 py-3 flex items-center gap-2">
+    <div className="rounded-xl border border-border bg-white card-elevated overflow-hidden">
+      <div className="border-b border-border px-4 py-3 flex items-center gap-2">
         <div className="h-2 w-2 rounded-full bg-primary/60" />
-        <h2 className="text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-          Latest Filings
+        <h2 className="text-[12px] font-semibold text-muted-foreground">
+          최신 공시
         </h2>
       </div>
       {disclosures.length === 0 ? (
         <div className="px-4 py-12 text-center">
-          <p className="text-sm text-muted-foreground/60">No filings yet</p>
-          <p className="mt-1 text-[11px] text-muted-foreground/40">
-            Add stocks to your watchlist to see filings here
+          <p className="text-sm text-muted-foreground">공시 내역이 없습니다</p>
+          <p className="mt-1 text-[11px] text-muted-foreground/60">
+            관심종목을 추가하면 공시가 표시됩니다
           </p>
         </div>
       ) : (
-        <div className="divide-y divide-border/20">
+        <div className="divide-y divide-border">
           {disclosures.map((d) => (
             <div
               key={d.rcept_no}
-              className="group flex items-center gap-3 px-4 py-2.5 hover:bg-accent/20 transition-all"
+              className="group flex items-center gap-3 px-4 py-2.5 hover:bg-accent/50 transition-colors"
             >
-              <span className="shrink-0 text-[10px] font-mono text-muted-foreground/50 tabular-nums">
+              <span className="shrink-0 text-[10px] text-muted-foreground/50 tabular-nums">
                 {formatDateShort(d.rcept_dt)}
               </span>
               <span className="text-[11px] font-semibold text-primary/80 shrink-0 group-hover:text-primary transition-colors">

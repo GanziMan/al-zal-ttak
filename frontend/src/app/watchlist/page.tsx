@@ -17,7 +17,7 @@ export default function WatchlistPage() {
       setWatchlist(data.watchlist);
       setError("");
     } catch {
-      setError("Unable to load watchlist. Check backend server.");
+      setError("관심종목을 불러올 수 없습니다. 백엔드 서버를 확인하세요.");
     } finally {
       setLoading(false);
     }
@@ -36,7 +36,7 @@ export default function WatchlistPage() {
       });
       setWatchlist(data.watchlist);
     } catch {
-      setError("Failed to add stock.");
+      setError("종목 추가에 실패했습니다.");
     }
   }
 
@@ -45,23 +45,23 @@ export default function WatchlistPage() {
       const data = await api.removeFromWatchlist(corpCode);
       setWatchlist(data.watchlist);
     } catch {
-      setError("Failed to remove stock.");
+      setError("종목 삭제에 실패했습니다.");
     }
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold tracking-tight">Watchlist</h1>
-        <p className="text-[12px] text-muted-foreground/60 mt-0.5">
-          Track and manage your stock portfolio
+        <h1 className="text-xl font-bold tracking-tight">관심종목</h1>
+        <p className="text-[12px] text-muted-foreground mt-0.5">
+          관심 종목을 관리하세요
         </p>
       </div>
 
       <StockSearch onSelect={handleAdd} />
 
       {error && (
-        <div className="rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-[12px] text-red-400">
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[12px] text-red-700">
           {error}
         </div>
       )}
