@@ -2,21 +2,26 @@
 from __future__ import annotations
 
 import io
+import logging
 import zipfile
 import xml.etree.ElementTree as ET
 from typing import List, Dict
 
 import httpx
-from sqlalchemy import select, func
+from sqlalchemy import select, func, delete
 
 from app.database import async_session
 from app.models.corp_code import CorpCode
 
+logger = logging.getLogger(__name__)
+
 DART_BASE_URL = "https://opendart.fss.or.kr/api"
+
+BATCH_SIZE = 500
 
 
 async def download_corp_codes(api_key: str) -> List[Dict]:
-    """DART에서 기업코드 목록 다운로드 → DB 저장"""
+    """DART에서 기업코드 목록 다운로드 → DB 저장 (batch insert)"""
     async with httpx.AsyncClient() as client:
         resp = await client.get(
             f"{DART_BASE_URL}/corpCode.xml",
@@ -41,17 +46,18 @@ async def download_corp_codes(api_key: str) -> List[Dict]:
                 "stock_code": stock_code,
             })
 
-    # DB에 upsert
+    logger.info("Parsed %d corps from DART XML, inserting to DB...", len(corps))
+
+    # 기존 데이터 삭제 후 batch insert (pgbouncer 호환)
     async with async_session() as session:
-        for c in corps:
-            existing = await session.get(CorpCode, c["corp_code"])
-            if existing:
-                existing.corp_name = c["corp_name"]
-                existing.stock_code = c["stock_code"]
-            else:
-                session.add(CorpCode(**c))
+        await session.execute(delete(CorpCode))
+        for i in range(0, len(corps), BATCH_SIZE):
+            batch = corps[i:i + BATCH_SIZE]
+            session.add_all([CorpCode(**c) for c in batch])
+            await session.flush()
         await session.commit()
 
+    logger.info("Successfully inserted %d corp codes to DB", len(corps))
     return corps
 
 
