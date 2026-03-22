@@ -10,7 +10,7 @@ from app.config import settings
 from app.dependencies import get_current_user
 from app.models.user import User
 from app.services.dart_client import DartClient
-from app.services.financial_data import get_financial_summary, get_dividend_history, get_shareholders
+from app.services.financial_data import get_all_company_data, get_financial_summary, get_dividend_history, get_shareholders
 
 logger = logging.getLogger(__name__)
 
@@ -62,11 +62,10 @@ async def get_company_summary(
         except Exception:
             return {}
 
-    company_info, financials, dividends, shareholders = await asyncio.gather(
+    # 기업정보는 별도, 재무/배당/대주주는 batch로 효율적 조회
+    company_info, (financials, dividends, shareholders) = await asyncio.gather(
         _company(),
-        get_financial_summary(dart_client, corp_code, years=5),
-        get_dividend_history(dart_client, corp_code, years=5),
-        get_shareholders(dart_client, corp_code),
+        get_all_company_data(dart_client, corp_code, years=5),
     )
 
     return {
