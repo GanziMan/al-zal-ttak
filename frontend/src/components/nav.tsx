@@ -77,7 +77,7 @@ export function Nav() {
           <div className="flex items-center gap-10">
             <Link href="/" className="flex items-center gap-2.5 group">
               <span className="text-sm font-bold tracking-wide text-foreground group-hover:text-primary transition-colors">
-                ALZALTTAK
+                알잘딱
               </span>
             </Link>
             <nav className="hidden sm:flex items-center gap-1">
