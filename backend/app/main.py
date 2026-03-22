@@ -36,6 +36,26 @@ async def _get_active_user_ids() -> list[int]:
         return [r[0] for r in result.all()]
 
 
+async def _warmup_cache() -> None:
+    """서버 시작 시 모든 유저의 공시 캐시를 미리 채운다."""
+    try:
+        await asyncio.sleep(5)  # DB 초기화 대기
+        user_ids = await _get_active_user_ids()
+        if not user_ids:
+            logger.info("Cache warmup: no active users")
+            return
+        logger.info("Cache warmup: preloading disclosures for %d users", len(user_ids))
+        dart_client = DartClient(api_key=settings.dart_api_key)
+        for user_id in user_ids:
+            try:
+                await get_watchlist_disclosures(dart_client, days=7, user_id=user_id)
+            except Exception:
+                logger.warning("Cache warmup failed for user %d", user_id)
+        logger.info("Cache warmup completed")
+    except Exception:
+        logger.exception("Cache warmup failed")
+
+
 async def _auto_scan_loop() -> None:
     """30분 간격으로 모든 유저의 공시를 스캔."""
     while True:
@@ -133,9 +153,11 @@ async def _download_corps_background() -> None:
 async def lifespan(app: FastAPI):
     await init_db()
     corp_task = asyncio.create_task(_download_corps_background())
+    warmup_task = asyncio.create_task(_warmup_cache())
     scan_task = asyncio.create_task(_auto_scan_loop())
     yield
     scan_task.cancel()
+    warmup_task.cancel()
     corp_task.cancel()
 
 
