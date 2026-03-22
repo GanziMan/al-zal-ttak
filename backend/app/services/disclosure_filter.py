@@ -12,7 +12,7 @@ async def get_watchlist_disclosures(
     days: int = 1,
 ) -> list[dict]:
     """관심 종목의 최근 공시만 필터링하여 반환"""
-    watchlist = load_watchlist()
+    watchlist = await load_watchlist()
     if not watchlist:
         return []
 

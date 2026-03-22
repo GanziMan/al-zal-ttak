@@ -22,22 +22,22 @@ class UpdateMemoRequest(BaseModel):
 
 @router.get("")
 async def get_bookmarks():
-    return {"bookmarks": load_bookmarks()}
+    return {"bookmarks": await load_bookmarks()}
 
 
 @router.post("")
 async def create_bookmark(req: AddBookmarkRequest):
-    bookmarks = add_bookmark(req.rcept_no, req.corp_name, req.report_nm, req.memo or "")
+    bookmarks = await add_bookmark(req.rcept_no, req.corp_name, req.report_nm, req.memo or "")
     return {"bookmarks": bookmarks}
 
 
 @router.delete("/{rcept_no}")
 async def delete_bookmark(rcept_no: str):
-    bookmarks = remove_bookmark(rcept_no)
+    bookmarks = await remove_bookmark(rcept_no)
     return {"bookmarks": bookmarks}
 
 
 @router.patch("/{rcept_no}/memo")
 async def patch_memo(rcept_no: str, req: UpdateMemoRequest):
-    bookmarks = update_memo(rcept_no, req.memo)
+    bookmarks = await update_memo(rcept_no, req.memo)
     return {"bookmarks": bookmarks}

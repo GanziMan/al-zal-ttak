@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
+from app.database import init_db
 from app.services.corp_code_loader import load_cached_corps, download_corp_codes
 from app.services.dart_client import DartClient
 from app.services.disclosure_filter import get_watchlist_disclosures
@@ -35,7 +36,7 @@ async def _auto_scan_loop() -> None:
             pending = []
             for d in disclosures:
                 rcept_no = d.get("rcept_no", "")
-                cached = get_cached_analysis(rcept_no) if rcept_no else None
+                cached = (await get_cached_analysis(rcept_no)) if rcept_no else None
                 if cached is None:
                     pending.append(d)
 
@@ -44,7 +45,7 @@ async def _auto_scan_loop() -> None:
                 continue
 
             # 텔레그램 설정
-            user_settings = load_settings()
+            user_settings = await load_settings()
             tg_enabled = user_settings.get("telegram_enabled", False)
             tg_chat_id = user_settings.get("telegram_chat_id", "")
             tg_categories = user_settings.get("alert_categories", [])
@@ -87,11 +88,12 @@ async def _auto_scan_loop() -> None:
                 try:
                     all_disclosures = await dart_client.get_all_disclosures()
                     for kw in alert_keywords:
-                        matched = [
-                            d for d in all_disclosures
-                            if kw in d.get("report_nm", "")
-                            and not get_cached_analysis(d.get("rcept_no", ""))
-                        ]
+                        matched = []
+                        for d in all_disclosures:
+                            if kw in d.get("report_nm", ""):
+                                c = await get_cached_analysis(d.get("rcept_no", ""))
+                                if not c:
+                                    matched.append(d)
                         if matched:
                             msg = format_keyword_alert(kw, matched)
                             await send_alert(settings.telegram_bot_token, tg_chat_id, msg)
@@ -101,18 +103,27 @@ async def _auto_scan_loop() -> None:
             logger.exception("Auto-scan failed")
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # 앱 시작 시 캐시 파일이 없으면 DART에서 다운로드
+async def _download_corps_background() -> None:
+    """백그라운드에서 기업코드 다운로드"""
     try:
         if not load_cached_corps() and settings.dart_api_key:
             await download_corp_codes(settings.dart_api_key)
+            logger.info("Corp codes downloaded successfully")
     except Exception:
-        logger.warning("Failed to download corp codes on startup, will retry later")
+        logger.warning("Failed to download corp codes, will retry later")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # DB 테이블 생성
+    await init_db()
+    # 기업코드 다운로드를 백그라운드로 (서버 기동 블로킹 방지)
+    corp_task = asyncio.create_task(_download_corps_background())
     # 자동 스캔 스케줄러 시작
     scan_task = asyncio.create_task(_auto_scan_loop())
     yield
     scan_task.cancel()
+    corp_task.cancel()
 
 
 app = FastAPI(

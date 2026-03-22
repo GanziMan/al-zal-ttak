@@ -1,44 +1,30 @@
-"""관심 종목 관리 (JSON 파일 기반, 추후 DB 전환)"""
+"""관심 종목 관리 (DB 기반)"""
 from __future__ import annotations
 
-import json
-from pathlib import Path
-
-WATCHLIST_PATH = Path(__file__).resolve().parent.parent.parent.parent / "data" / "watchlist.json"
-
-
-def load_watchlist() -> list[dict]:
-    """관심 종목 목록 로드"""
-    if not WATCHLIST_PATH.exists():
-        return []
-    with open(WATCHLIST_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)
+from sqlalchemy import select, delete
+from app.database import async_session
+from app.models.watchlist import Watchlist
 
 
-def save_watchlist(watchlist: list[dict]):
-    """관심 종목 목록 저장"""
-    WATCHLIST_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with open(WATCHLIST_PATH, "w", encoding="utf-8") as f:
-        json.dump(watchlist, f, ensure_ascii=False, indent=2)
+async def load_watchlist() -> list[dict]:
+    async with async_session() as session:
+        result = await session.execute(select(Watchlist))
+        rows = result.scalars().all()
+        return [{"corp_code": r.corp_code, "corp_name": r.corp_name, "stock_code": r.stock_code} for r in rows]
 
 
-def add_stock(corp_code: str, corp_name: str, stock_code: str) -> list[dict]:
-    """관심 종목 추가"""
-    watchlist = load_watchlist()
-    if any(w["corp_code"] == corp_code for w in watchlist):
-        return watchlist  # 이미 존재
-    watchlist.append({
-        "corp_code": corp_code,
-        "corp_name": corp_name,
-        "stock_code": stock_code,
-    })
-    save_watchlist(watchlist)
-    return watchlist
+async def add_stock(corp_code: str, corp_name: str, stock_code: str) -> list[dict]:
+    async with async_session() as session:
+        existing = await session.get(Watchlist, corp_code)
+        if existing:
+            return await load_watchlist()
+        session.add(Watchlist(corp_code=corp_code, corp_name=corp_name, stock_code=stock_code))
+        await session.commit()
+    return await load_watchlist()
 
 
-def remove_stock(corp_code: str) -> list[dict]:
-    """관심 종목 제거"""
-    watchlist = load_watchlist()
-    watchlist = [w for w in watchlist if w["corp_code"] != corp_code]
-    save_watchlist(watchlist)
-    return watchlist
+async def remove_stock(corp_code: str) -> list[dict]:
+    async with async_session() as session:
+        await session.execute(delete(Watchlist).where(Watchlist.corp_code == corp_code))
+        await session.commit()
+    return await load_watchlist()

@@ -26,7 +26,7 @@ _background_tasks: set[asyncio.Task] = set()
 async def _enrich_one(d: dict) -> dict:
     """단일 공시에 AI 분석 결과를 붙인다 (캐시 우선)."""
     rcept_no = d.get("rcept_no", "")
-    cached = get_cached_analysis(rcept_no) if rcept_no else None
+    cached = (await get_cached_analysis(rcept_no)) if rcept_no else None
 
     if cached:
         d["analysis"] = cached
@@ -41,7 +41,7 @@ async def _enrich_one(d: dict) -> dict:
             content=content,
         )
         if rcept_no:
-            save_analysis(rcept_no, analysis, metadata={
+            await save_analysis(rcept_no, analysis, metadata={
                 "rcept_dt": d.get("rcept_dt", ""),
                 "corp_name": d.get("corp_name", ""),
                 "report_nm": d.get("report_nm", ""),
@@ -59,7 +59,7 @@ async def _analyze_batch(disclosures: list[dict]) -> None:
     sem = asyncio.Semaphore(CONCURRENT_ANALYSIS_LIMIT)
 
     # 텔레그램 알림 설정 1회 로드
-    user_settings = load_settings()
+    user_settings = await load_settings()
     tg_enabled = user_settings.get("telegram_enabled", False)
     tg_chat_id = user_settings.get("telegram_chat_id", "")
     tg_categories = user_settings.get("alert_categories", [])
@@ -108,7 +108,7 @@ async def get_disclosure_count(since: str = Query(None)):
 
 @router.get("/{rcept_no}/similar")
 async def get_similar_disclosures(rcept_no: str, limit: int = Query(5, ge=1, le=20)):
-    cached = get_cached_full(rcept_no)
+    cached = await get_cached_full(rcept_no)
     if not cached:
         return {"similar": []}
     analysis = cached.get("analysis", {})
@@ -118,7 +118,7 @@ async def get_similar_disclosures(rcept_no: str, limit: int = Query(5, ge=1, le=
     keywords = [w for w in report_nm.split() if len(w) > 2 and w not in stop_words]
     if not category or not keywords:
         return {"similar": []}
-    results = search_similar(category, keywords, exclude_rcept_no=rcept_no, limit=limit)
+    results = await search_similar(category, keywords, exclude_rcept_no=rcept_no, limit=limit)
     return {"similar": results}
 
 
@@ -135,7 +135,7 @@ async def get_disclosures(
     pending = []
     for d in disclosures:
         rcept_no = d.get("rcept_no", "")
-        cached = get_cached_analysis(rcept_no) if rcept_no else None
+        cached = (await get_cached_analysis(rcept_no)) if rcept_no else None
         d["analysis"] = cached  # None if not cached
         if cached is None:
             pending.append(d)

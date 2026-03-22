@@ -15,16 +15,16 @@ class AddStockRequest(BaseModel):
 
 @router.get("")
 async def get_watchlist():
-    return {"watchlist": load_watchlist()}
+    return {"watchlist": await load_watchlist()}
 
 
 @router.post("")
 async def add_to_watchlist(req: AddStockRequest):
-    watchlist = add_stock(req.corp_code, req.corp_name, req.stock_code)
+    watchlist = await add_stock(req.corp_code, req.corp_name, req.stock_code)
     return {"watchlist": watchlist}
 
 
 @router.delete("/{corp_code}")
 async def remove_from_watchlist(corp_code: str):
-    watchlist = remove_stock(corp_code)
+    watchlist = await remove_stock(corp_code)
     return {"watchlist": watchlist}

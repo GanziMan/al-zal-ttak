@@ -1,71 +1,78 @@
-"""AI 분석 결과 캐싱 (rcept_no 기준, JSON 파일)"""
+"""AI 분석 결과 캐싱 (DB 기반)"""
 from __future__ import annotations
 
-import json
-from pathlib import Path
-
-CACHE_DIR = Path(__file__).resolve().parent.parent.parent.parent / "data" / "analysis_cache"
-
-
-def _cache_path(rcept_no: str) -> Path:
-    return CACHE_DIR / f"{rcept_no}.json"
+from sqlalchemy import select
+from app.database import async_session
+from app.models.analysis_cache import AnalysisCache
 
 
-def get_cached_analysis(rcept_no: str) -> dict | None:
-    path = _cache_path(rcept_no)
-    if not path.exists():
-        return None
-    with open(path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-    return data.get("analysis", data)
+async def get_cached_analysis(rcept_no: str) -> dict | None:
+    async with async_session() as session:
+        row = await session.get(AnalysisCache, rcept_no)
+        if not row:
+            return None
+        return row.analysis
 
 
-def save_analysis(rcept_no: str, analysis: dict, metadata: dict | None = None):
-    CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    data = {"analysis": analysis}
-    if metadata:
-        data.update(metadata)
-    with open(_cache_path(rcept_no), "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+async def save_analysis(rcept_no: str, analysis: dict, metadata: dict | None = None):
+    async with async_session() as session:
+        row = await session.get(AnalysisCache, rcept_no)
+        if not row:
+            row = AnalysisCache(rcept_no=rcept_no)
+            session.add(row)
+        row.analysis = analysis
+        if metadata:
+            row.rcept_dt = metadata.get("rcept_dt", "")
+            row.corp_name = metadata.get("corp_name", "")
+            row.report_nm = metadata.get("report_nm", "")
+        await session.commit()
 
 
-def get_cached_full(rcept_no: str) -> dict | None:
-    path = _cache_path(rcept_no)
-    if not path.exists():
-        return None
-    with open(path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-    if "analysis" not in data:
-        return None
-    return data
+async def get_cached_full(rcept_no: str) -> dict | None:
+    async with async_session() as session:
+        row = await session.get(AnalysisCache, rcept_no)
+        if not row or not row.analysis:
+            return None
+        return {
+            "rcept_no": row.rcept_no,
+            "rcept_dt": row.rcept_dt,
+            "corp_name": row.corp_name,
+            "report_nm": row.report_nm,
+            "analysis": row.analysis,
+        }
 
 
-def list_all_cached_full() -> list[dict]:
-    if not CACHE_DIR.exists():
-        return []
-    results = []
-    for p in CACHE_DIR.glob("*.json"):
-        with open(p, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        if "analysis" in data and "rcept_dt" in data:
-            data["rcept_no"] = p.stem
-            results.append(data)
-    return results
+async def list_all_cached_full() -> list[dict]:
+    async with async_session() as session:
+        result = await session.execute(
+            select(AnalysisCache).where(AnalysisCache.rcept_dt != "")
+        )
+        rows = result.scalars().all()
+        return [
+            {
+                "rcept_no": r.rcept_no,
+                "rcept_dt": r.rcept_dt,
+                "corp_name": r.corp_name,
+                "report_nm": r.report_nm,
+                "analysis": r.analysis,
+            }
+            for r in rows
+        ]
 
 
-def list_cached() -> list[str]:
-    if not CACHE_DIR.exists():
-        return []
-    return [p.stem for p in CACHE_DIR.glob("*.json")]
+async def list_cached() -> list[str]:
+    async with async_session() as session:
+        result = await session.execute(select(AnalysisCache.rcept_no))
+        return [r[0] for r in result.all()]
 
 
-def search_similar(
+async def search_similar(
     category: str,
     keywords: list[str],
     exclude_rcept_no: str,
     limit: int = 5,
 ) -> list[dict]:
-    all_cached = list_all_cached_full()
+    all_cached = await list_all_cached_full()
     scored = []
     for item in all_cached:
         rcept_no = item.get("rcept_no", "")

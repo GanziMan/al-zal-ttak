@@ -1,10 +1,8 @@
-"""사용자 설정 관리 (JSON 파일)"""
+"""사용자 설정 관리 (DB 기반)"""
 from __future__ import annotations
 
-import json
-from pathlib import Path
-
-SETTINGS_PATH = Path(__file__).resolve().parent.parent.parent.parent / "data" / "settings.json"
+from app.database import async_session
+from app.models.settings import Settings
 
 DEFAULT_SETTINGS = {
     "telegram_enabled": True,
@@ -16,18 +14,32 @@ DEFAULT_SETTINGS = {
     "alert_keywords": [],
 }
 
-
-def load_settings() -> dict:
-    if not SETTINGS_PATH.exists():
-        save_settings(DEFAULT_SETTINGS)
-        return DEFAULT_SETTINGS.copy()
-    with open(SETTINGS_PATH, "r", encoding="utf-8") as f:
-        stored = json.load(f)
-    merged = {**DEFAULT_SETTINGS, **stored}
-    return merged
+FIELDS = [
+    "telegram_enabled", "telegram_chat_id", "min_importance_score",
+    "categories", "alert_categories", "disclosure_days", "alert_keywords",
+]
 
 
-def save_settings(settings: dict):
-    SETTINGS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with open(SETTINGS_PATH, "w", encoding="utf-8") as f:
-        json.dump(settings, f, ensure_ascii=False, indent=2)
+def _row_to_dict(row: Settings) -> dict:
+    return {f: getattr(row, f) for f in FIELDS}
+
+
+async def load_settings() -> dict:
+    async with async_session() as session:
+        row = await session.get(Settings, "default")
+        if not row:
+            await save_settings(DEFAULT_SETTINGS)
+            return DEFAULT_SETTINGS.copy()
+        return {**DEFAULT_SETTINGS, **_row_to_dict(row)}
+
+
+async def save_settings(data: dict):
+    async with async_session() as session:
+        row = await session.get(Settings, "default")
+        if not row:
+            row = Settings(key="default")
+            session.add(row)
+        for f in FIELDS:
+            if f in data:
+                setattr(row, f, data[f])
+        await session.commit()

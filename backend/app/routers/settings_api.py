@@ -20,13 +20,13 @@ class UpdateSettingsRequest(BaseModel):
 
 @router.get("")
 async def get_settings():
-    return load_settings()
+    return await load_settings()
 
 
 @router.put("")
 async def update_settings(req: UpdateSettingsRequest):
-    current = load_settings()
+    current = await load_settings()
     updates = req.model_dump(exclude_none=True)
     current.update(updates)
-    save_settings(current)
+    await save_settings(current)
     return current

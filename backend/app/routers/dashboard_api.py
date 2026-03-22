@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Query
 
@@ -10,14 +9,14 @@ from app.config import settings
 from app.services.dart_client import DartClient
 from app.services.disclosure_filter import get_watchlist_disclosures
 from app.services.watchlist import load_watchlist
-from app.services.analysis_cache import get_cached_analysis, list_all_cached_full
+from app.services.analysis_cache import get_cached_analysis
 
 router = APIRouter()
 
 
 @router.get("/summary")
 async def get_summary():
-    watchlist = load_watchlist()
+    watchlist = await load_watchlist()
     dart_client = DartClient(api_key=settings.dart_api_key)
 
     disclosures = await get_watchlist_disclosures(dart_client, days=7) if watchlist else []
@@ -28,7 +27,7 @@ async def get_summary():
 
     for d in disclosures:
         rcept_no = d.get("rcept_no", "")
-        cached = get_cached_analysis(rcept_no) if rcept_no else None
+        cached = (await get_cached_analysis(rcept_no)) if rcept_no else None
         if cached:
             d["analysis"] = cached
             cat = cached.get("category", "")
@@ -52,7 +51,7 @@ async def get_summary():
 
 @router.get("/history")
 async def get_history(days: int = Query(30, ge=1, le=90)):
-    watchlist = load_watchlist()
+    watchlist = await load_watchlist()
     if not watchlist:
         return {"history": []}
 
@@ -62,7 +61,7 @@ async def get_history(days: int = Query(30, ge=1, le=90)):
     # 분석 캐시가 있으면 붙이기
     for d in disclosures:
         rcept_no = d.get("rcept_no", "")
-        cached = get_cached_analysis(rcept_no) if rcept_no else None
+        cached = (await get_cached_analysis(rcept_no)) if rcept_no else None
         if cached:
             d["analysis"] = cached
 

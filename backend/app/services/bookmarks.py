@@ -1,53 +1,53 @@
-"""북마크/메모 관리 (JSON 파일 기반)"""
+"""북마크/메모 관리 (DB 기반)"""
 from __future__ import annotations
 
-import json
 from datetime import datetime
-from pathlib import Path
 
-BOOKMARKS_PATH = Path(__file__).resolve().parent.parent.parent.parent / "data" / "bookmarks.json"
-
-
-def load_bookmarks() -> list[dict]:
-    if not BOOKMARKS_PATH.exists():
-        return []
-    with open(BOOKMARKS_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)
+from sqlalchemy import select, delete
+from app.database import async_session
+from app.models.bookmark import Bookmark
 
 
-def save_bookmarks(bookmarks: list[dict]):
-    BOOKMARKS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with open(BOOKMARKS_PATH, "w", encoding="utf-8") as f:
-        json.dump(bookmarks, f, ensure_ascii=False, indent=2)
+async def load_bookmarks() -> list[dict]:
+    async with async_session() as session:
+        result = await session.execute(select(Bookmark).order_by(Bookmark.created_at.desc()))
+        rows = result.scalars().all()
+        return [
+            {
+                "rcept_no": r.rcept_no,
+                "corp_name": r.corp_name,
+                "report_nm": r.report_nm,
+                "memo": r.memo,
+                "created_at": r.created_at.isoformat(),
+            }
+            for r in rows
+        ]
 
 
-def add_bookmark(rcept_no: str, corp_name: str, report_nm: str, memo: str = "") -> list[dict]:
-    bookmarks = load_bookmarks()
-    if any(b["rcept_no"] == rcept_no for b in bookmarks):
-        return bookmarks
-    bookmarks.append({
-        "rcept_no": rcept_no,
-        "corp_name": corp_name,
-        "report_nm": report_nm,
-        "memo": memo,
-        "created_at": datetime.now().isoformat(),
-    })
-    save_bookmarks(bookmarks)
-    return bookmarks
+async def add_bookmark(rcept_no: str, corp_name: str, report_nm: str, memo: str = "") -> list[dict]:
+    async with async_session() as session:
+        existing = await session.get(Bookmark, rcept_no)
+        if existing:
+            return await load_bookmarks()
+        session.add(Bookmark(
+            rcept_no=rcept_no, corp_name=corp_name, report_nm=report_nm,
+            memo=memo, created_at=datetime.utcnow(),
+        ))
+        await session.commit()
+    return await load_bookmarks()
 
 
-def remove_bookmark(rcept_no: str) -> list[dict]:
-    bookmarks = load_bookmarks()
-    bookmarks = [b for b in bookmarks if b["rcept_no"] != rcept_no]
-    save_bookmarks(bookmarks)
-    return bookmarks
+async def remove_bookmark(rcept_no: str) -> list[dict]:
+    async with async_session() as session:
+        await session.execute(delete(Bookmark).where(Bookmark.rcept_no == rcept_no))
+        await session.commit()
+    return await load_bookmarks()
 
 
-def update_memo(rcept_no: str, memo: str) -> list[dict]:
-    bookmarks = load_bookmarks()
-    for b in bookmarks:
-        if b["rcept_no"] == rcept_no:
-            b["memo"] = memo
-            break
-    save_bookmarks(bookmarks)
-    return bookmarks
+async def update_memo(rcept_no: str, memo: str) -> list[dict]:
+    async with async_session() as session:
+        row = await session.get(Bookmark, rcept_no)
+        if row:
+            row.memo = memo
+            await session.commit()
+    return await load_bookmarks()
