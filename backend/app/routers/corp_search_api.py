@@ -10,5 +10,5 @@ router = APIRouter()
 
 @router.get("/search")
 async def search(q: str = Query(..., min_length=1, description="검색 키워드")):
-    results = search_corps(q)
-    return {"results": results[:20]}
+    results = await search_corps(q)
+    return {"results": results}

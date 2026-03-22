@@ -113,9 +113,10 @@ async def _auto_scan_loop() -> None:
 
 
 async def _download_corps_background() -> None:
-    """백그라운드에서 기업코드 다운로드"""
+    """DB에 기업코드가 없으면 DART에서 다운로드"""
     try:
-        if not load_cached_corps() and settings.dart_api_key:
+        cached = await load_cached_corps()
+        if not cached and settings.dart_api_key:
             await download_corp_codes(settings.dart_api_key)
             logger.info("Corp codes downloaded successfully")
     except Exception:
