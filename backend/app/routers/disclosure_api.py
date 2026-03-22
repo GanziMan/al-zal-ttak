@@ -49,7 +49,21 @@ async def _enrich_one(d: dict) -> dict:
             })
         d["analysis"] = analysis
     except Exception:
-        d["analysis"] = None
+        logger.exception("AI analysis failed for %s: %s", d.get("corp_name", ""), d.get("report_nm", ""))
+        # 실패해도 DB에 저장해서 무한 재시도 방지
+        fallback = {
+            "category": "단순정보",
+            "importance_score": 0,
+            "summary": "AI 분석을 수행할 수 없습니다.",
+            "action_item": "원문을 직접 확인하세요.",
+        }
+        if rcept_no:
+            await save_analysis(rcept_no, fallback, metadata={
+                "rcept_dt": d.get("rcept_dt", ""),
+                "corp_name": d.get("corp_name", ""),
+                "report_nm": d.get("report_nm", ""),
+            })
+        d["analysis"] = fallback
 
     return d
 
