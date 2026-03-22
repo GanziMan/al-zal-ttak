@@ -64,7 +64,7 @@ export const metadata: Metadata = {
     canonical: SITE_URL,
   },
   verification: {
-    google: "42dxIfcyJlfL_sxBemEF70hIDkHDJa4XGH6dhKXVed8",
+    google: "Zl29et0mZnPrc2Zjwn8RJ3vjPez_FzrfQmrle9GuAbM",
   },
   appleWebApp: {
     capable: true,
