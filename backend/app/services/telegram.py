@@ -23,6 +23,20 @@ async def send_alert(bot_token: str, chat_id: str, message: str) -> None:
         logger.exception("Telegram alert failed")
 
 
+def format_keyword_alert(keyword: str, disclosures: list[dict]) -> str:
+    """키워드 매칭 공시 알림 메시지 포맷."""
+    lines = [f"\U0001f50d 키워드 알림: *{keyword}*\n"]
+    for d in disclosures[:10]:
+        corp = d.get("corp_name", "")
+        title = d.get("report_nm", "")
+        rcept_no = d.get("rcept_no", "")
+        link = f"https://dart.fss.or.kr/dsaf001/main.do?rcept_no={rcept_no}" if rcept_no else ""
+        lines.append(f"\u2022 {corp} — [{title}]({link})" if link else f"\u2022 {corp} — {title}")
+    if len(disclosures) > 10:
+        lines.append(f"\n... 외 {len(disclosures) - 10}건")
+    return "\n".join(lines)
+
+
 def format_disclosure_alert(
     corp_name: str,
     title: str,

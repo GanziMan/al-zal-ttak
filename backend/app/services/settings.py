@@ -13,6 +13,7 @@ DEFAULT_SETTINGS = {
     "categories": ["호재", "악재", "중립", "단순정보"],
     "alert_categories": ["호재", "악재"],
     "disclosure_days": 7,
+    "alert_keywords": [],
 }
 
 

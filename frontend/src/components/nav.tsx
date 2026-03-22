@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -12,6 +12,7 @@ import {
   Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/api";
 
 const links = [
   { href: "/", label: "대시보드" },
@@ -30,10 +31,33 @@ const tabs = [
 export function Nav() {
   const pathname = usePathname();
   const [isDark, setIsDark] = useState(false);
+  const [badgeCount, setBadgeCount] = useState(0);
+
+  const fetchCount = useCallback(async () => {
+    try {
+      if (document.visibilityState !== "visible") return;
+      const since = localStorage.getItem("disclosures_last_seen") || "";
+      if (!since) return;
+      const data = await api.getDisclosureCount(since);
+      setBadgeCount(data.count);
+    } catch {
+      // silent
+    }
+  }, []);
 
   useEffect(() => {
     setIsDark(document.documentElement.classList.contains("dark"));
-  }, []);
+    fetchCount();
+    const interval = setInterval(fetchCount, 120_000);
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") fetchCount();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [fetchCount]);
 
   function toggleTheme() {
     const next = !isDark;
@@ -69,6 +93,11 @@ export function Nav() {
                   )}
                 >
                   {link.label}
+                  {link.href === "/disclosures" && badgeCount > 0 && (
+                    <span className="absolute -top-1 -right-1 h-4 min-w-4 rounded-full bg-red-500 text-[9px] text-white flex items-center justify-center px-1 font-bold">
+                      {badgeCount > 99 ? "99+" : badgeCount}
+                    </span>
+                  )}
                 </Link>
               ))}
             </nav>
@@ -102,7 +131,7 @@ export function Nav() {
                 key={tab.href}
                 href={tab.href}
                 className={cn(
-                  "flex-1 flex flex-col items-center justify-center gap-0.5 py-2 min-h-[3.5rem] transition-colors",
+                  "relative flex-1 flex flex-col items-center justify-center gap-0.5 py-2 min-h-[3.5rem] transition-colors",
                   active
                     ? "text-primary"
                     : "text-muted-foreground"
@@ -112,6 +141,11 @@ export function Nav() {
                 <span className={cn("text-[10px]", active ? "font-semibold" : "font-medium")}>
                   {tab.label}
                 </span>
+                {tab.href === "/disclosures" && badgeCount > 0 && (
+                  <span className="absolute top-1 right-1/4 h-4 min-w-4 rounded-full bg-red-500 text-[9px] text-white flex items-center justify-center px-1 font-bold">
+                    {badgeCount > 99 ? "99+" : badgeCount}
+                  </span>
+                )}
               </Link>
             );
           })}

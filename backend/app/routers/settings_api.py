@@ -15,6 +15,7 @@ class UpdateSettingsRequest(BaseModel):
     min_importance_score: Optional[int] = None
     alert_categories: Optional[List[str]] = None
     disclosure_days: Optional[int] = None
+    alert_keywords: Optional[List[str]] = None
 
 
 @router.get("")

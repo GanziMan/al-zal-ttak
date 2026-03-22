@@ -38,6 +38,34 @@ class DartClient:
             resp.raise_for_status()
             return resp.json()
 
+    async def get_all_disclosures(
+        self,
+        bgn_de: str | None = None,
+        end_de: str | None = None,
+        page_count: int = 100,
+    ) -> list[dict]:
+        """전체 공시 목록 조회 (corp_code 없이)"""
+        from datetime import datetime, timedelta
+
+        if not bgn_de:
+            bgn_de = (datetime.now() - timedelta(days=1)).strftime("%Y%m%d")
+        if not end_de:
+            end_de = datetime.now().strftime("%Y%m%d")
+
+        params = {
+            "crtfc_key": self.api_key,
+            "bgn_de": bgn_de,
+            "end_de": end_de,
+            "page_count": page_count,
+        }
+        async with httpx.AsyncClient(timeout=DEFAULT_TIMEOUT) as client:
+            resp = await client.get(f"{DART_BASE_URL}/list.json", params=params)
+            resp.raise_for_status()
+            data = resp.json()
+        if data.get("status") != "000":
+            return []
+        return data.get("list", [])
+
     async def get_company_info(self, corp_code: str) -> dict:
         """기업 개황 조회"""
         params = {

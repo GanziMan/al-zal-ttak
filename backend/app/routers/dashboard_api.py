@@ -1,13 +1,16 @@
 """대시보드 집계 API"""
 from __future__ import annotations
 
-from fastapi import APIRouter
+from collections import defaultdict
+from datetime import datetime, timedelta
+
+from fastapi import APIRouter, Query
 
 from app.config import settings
 from app.services.dart_client import DartClient
 from app.services.disclosure_filter import get_watchlist_disclosures
 from app.services.watchlist import load_watchlist
-from app.services.analysis_cache import get_cached_analysis
+from app.services.analysis_cache import get_cached_analysis, list_all_cached_full
 
 router = APIRouter()
 
@@ -45,3 +48,29 @@ async def get_summary():
         "important_disclosures": important[:5],
         "recent_disclosures": disclosures[:10],
     }
+
+
+@router.get("/history")
+async def get_history(days: int = Query(30, ge=1, le=90)):
+    all_cached = list_all_cached_full()
+    cutoff = (datetime.now() - timedelta(days=days)).strftime("%Y%m%d")
+    by_date: dict[str, list[dict]] = defaultdict(list)
+    for item in all_cached:
+        dt = item.get("rcept_dt", "")
+        if dt >= cutoff:
+            by_date[dt].append(item.get("analysis", {}))
+    history = []
+    for date in sorted(by_date.keys()):
+        analyses = by_date[date]
+        scores = [a.get("importance_score", 0) for a in analyses]
+        avg_score = round(sum(scores) / len(scores)) if scores else 0
+        bullish = sum(1 for a in analyses if a.get("category") == "호재")
+        bearish = sum(1 for a in analyses if a.get("category") == "악재")
+        history.append({
+            "date": date,
+            "count": len(analyses),
+            "avg_score": avg_score,
+            "bullish": bullish,
+            "bearish": bearish,
+        })
+    return {"history": history}

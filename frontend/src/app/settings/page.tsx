@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Send, SlidersHorizontal } from "lucide-react";
+import { Send, SlidersHorizontal, Tag, X } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -25,6 +25,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [keywordInput, setKeywordInput] = useState("");
 
   useEffect(() => {
     async function fetchSettings() {
@@ -114,6 +115,79 @@ export default function SettingsPage() {
               className="h-9 bg-card border-border text-sm rounded-xl"
             />
           </div>
+        </div>
+      </div>
+
+      {/* Keyword Alert Section */}
+      <div className="glass-card rounded-2xl overflow-hidden">
+        <div className="border-b border-border/30 px-4 py-3 flex items-center gap-2">
+          <Tag className="h-4 w-4 text-primary/60" />
+          <h2 className="text-[12px] font-semibold text-muted-foreground">
+            키워드 알림
+          </h2>
+        </div>
+        <div className="p-4 space-y-3">
+          <p className="text-[11px] text-muted-foreground">
+            공시 제목에 키워드가 포함되면 텔레그램으로 알림을 보냅니다 (최대 20개)
+          </p>
+          <div className="flex gap-2">
+            <Input
+              value={keywordInput}
+              onChange={(e) => setKeywordInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  const kw = keywordInput.trim();
+                  if (!kw || !settings) return;
+                  const keywords = settings.alert_keywords || [];
+                  if (keywords.includes(kw) || keywords.length >= 20) return;
+                  setSettings({ ...settings, alert_keywords: [...keywords, kw] });
+                  setKeywordInput("");
+                }
+              }}
+              placeholder="키워드 입력"
+              className="h-9 bg-card border-border text-sm rounded-xl flex-1"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 rounded-xl text-[12px]"
+              onClick={() => {
+                const kw = keywordInput.trim();
+                if (!kw || !settings) return;
+                const keywords = settings.alert_keywords || [];
+                if (keywords.includes(kw) || keywords.length >= 20) return;
+                setSettings({ ...settings, alert_keywords: [...keywords, kw] });
+                setKeywordInput("");
+              }}
+            >
+              추가
+            </Button>
+          </div>
+          {(settings.alert_keywords?.length ?? 0) > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {settings.alert_keywords.map((kw) => (
+                <Badge
+                  key={kw}
+                  variant="outline"
+                  className="text-[11px] rounded-lg bg-primary/5 text-primary border-primary/20 flex items-center gap-1"
+                >
+                  {kw}
+                  <button
+                    onClick={() =>
+                      setSettings({
+                        ...settings,
+                        alert_keywords: settings.alert_keywords.filter((k) => k !== kw),
+                      })
+                    }
+                    className="hover:text-red-500 transition-colors"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

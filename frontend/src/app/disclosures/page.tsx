@@ -8,7 +8,7 @@ import { DisclosureFilters } from "@/components/disclosure-filters";
 import { DisclosureCard } from "@/components/disclosure-card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { api, Disclosure } from "@/lib/api";
+import { api, Bookmark, Disclosure } from "@/lib/api";
 
 function DisclosuresContent() {
   const searchParams = useSearchParams();
@@ -22,6 +22,7 @@ function DisclosuresContent() {
   const [days, setDays] = useState(Number(searchParams.get("days")) || 7);
   const [minScore, setMinScore] = useState(Number(searchParams.get("min_score")) || 0);
   const [pendingAnalysis, setPendingAnalysis] = useState(0);
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const prevPendingRef = useRef(0);
 
@@ -69,6 +70,12 @@ function DisclosuresContent() {
 
   useEffect(() => {
     fetchDisclosures();
+    // 마지막 방문 날짜 기록
+    const today = new Date();
+    const yyyymmdd = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, "0")}${String(today.getDate()).padStart(2, "0")}`;
+    localStorage.setItem("disclosures_last_seen", yyyymmdd);
+    // 북마크 로드
+    api.getBookmarks().then((data) => setBookmarks(data.bookmarks)).catch(() => {});
   }, [fetchDisclosures]);
 
   // AI 분석 완료 감지
@@ -176,7 +183,24 @@ function DisclosuresContent() {
           </div>
         ) : (
           filtered.map((d) => (
-            <DisclosureCard key={d.rcept_no} disclosure={d} />
+            <DisclosureCard
+              key={d.rcept_no}
+              disclosure={d}
+              isBookmarked={bookmarks.some((b) => b.rcept_no === d.rcept_no)}
+              onToggleBookmark={async (disc) => {
+                const exists = bookmarks.some((b) => b.rcept_no === disc.rcept_no);
+                try {
+                  const res = exists
+                    ? await api.removeBookmark(disc.rcept_no)
+                    : await api.addBookmark({
+                        rcept_no: disc.rcept_no,
+                        corp_name: disc.corp_name,
+                        report_nm: disc.report_nm,
+                      });
+                  setBookmarks(res.bookmarks);
+                } catch {}
+              }}
+            />
           ))
         )}
       </div>

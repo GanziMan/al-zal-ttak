@@ -10,7 +10,7 @@ from fastapi import APIRouter, Query
 from app.config import settings
 from app.services.dart_client import DartClient
 from app.services.disclosure_filter import get_watchlist_disclosures
-from app.services.analysis_cache import get_cached_analysis, save_analysis
+from app.services.analysis_cache import get_cached_analysis, get_cached_full, save_analysis, search_similar
 from app.services.settings import load_settings
 from app.services.telegram import send_alert, format_disclosure_alert
 from app.agents.runner import analyze_disclosure
@@ -41,7 +41,11 @@ async def _enrich_one(d: dict) -> dict:
             content=content,
         )
         if rcept_no:
-            save_analysis(rcept_no, analysis)
+            save_analysis(rcept_no, analysis, metadata={
+                "rcept_dt": d.get("rcept_dt", ""),
+                "corp_name": d.get("corp_name", ""),
+                "report_nm": d.get("report_nm", ""),
+            })
         d["analysis"] = analysis
     except Exception:
         d["analysis"] = None
@@ -91,6 +95,31 @@ async def _analyze_batch(disclosures: list[dict]) -> None:
         logger.info("Background analysis completed")
     except Exception:
         logger.exception("Background analysis failed")
+
+
+@router.get("/count")
+async def get_disclosure_count(since: str = Query(None)):
+    dart_client = DartClient(api_key=settings.dart_api_key)
+    disclosures = await get_watchlist_disclosures(dart_client, days=7)
+    if since:
+        disclosures = [d for d in disclosures if d.get("rcept_dt", "") >= since]
+    return {"count": len(disclosures)}
+
+
+@router.get("/{rcept_no}/similar")
+async def get_similar_disclosures(rcept_no: str, limit: int = Query(5, ge=1, le=20)):
+    cached = get_cached_full(rcept_no)
+    if not cached:
+        return {"similar": []}
+    analysis = cached.get("analysis", {})
+    category = analysis.get("category", "")
+    report_nm = cached.get("report_nm", "")
+    stop_words = {"의", "및", "등", "에", "을", "를", "이", "가", "은", "는", "로", "과", "와"}
+    keywords = [w for w in report_nm.split() if len(w) > 2 and w not in stop_words]
+    if not category or not keywords:
+        return {"similar": []}
+    results = search_similar(category, keywords, exclude_rcept_no=rcept_no, limit=limit)
+    return {"similar": results}
 
 
 @router.get("")

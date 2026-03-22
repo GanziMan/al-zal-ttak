@@ -6,6 +6,8 @@ import {
   ImportantDisclosures,
   RecentTimeline,
 } from "@/components/important-disclosures";
+import { DisclosureHistoryChart } from "@/components/disclosure-history-chart";
+import { BookmarksSection } from "@/components/bookmarks-section";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, DashboardSummary } from "@/lib/api";
 
@@ -68,12 +70,16 @@ export default function DashboardPage() {
         bearish={data?.bearish ?? 0}
       />
 
+      <DisclosureHistoryChart />
+
       <div className="grid gap-4 lg:grid-cols-2">
         <ImportantDisclosures
           disclosures={data?.important_disclosures ?? []}
         />
         <RecentTimeline disclosures={data?.recent_disclosures ?? []} />
       </div>
+
+      <BookmarksSection />
     </div>
   );
 }

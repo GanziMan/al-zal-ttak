@@ -53,6 +53,41 @@ export const api = {
       method: "PUT",
       body: JSON.stringify(settings),
     }),
+
+  // 북마크
+  getBookmarks: () => request<{ bookmarks: Bookmark[] }>("/api/bookmarks"),
+  addBookmark: (item: { rcept_no: string; corp_name: string; report_nm: string; memo?: string }) =>
+    request<{ bookmarks: Bookmark[] }>("/api/bookmarks", {
+      method: "POST",
+      body: JSON.stringify(item),
+    }),
+  removeBookmark: (rceptNo: string) =>
+    request<{ bookmarks: Bookmark[] }>(`/api/bookmarks/${rceptNo}`, {
+      method: "DELETE",
+    }),
+  updateBookmarkMemo: (rceptNo: string, memo: string) =>
+    request<{ bookmarks: Bookmark[] }>(`/api/bookmarks/${rceptNo}/memo`, {
+      method: "PATCH",
+      body: JSON.stringify({ memo }),
+    }),
+
+  // 공시 카운트
+  getDisclosureCount: (since?: string) => {
+    const qs = since ? `?since=${since}` : "";
+    return request<{ count: number }>(`/api/disclosures/count${qs}`);
+  },
+
+  // 히스토리
+  getDisclosureHistory: (days?: number) => {
+    const qs = days ? `?days=${days}` : "";
+    return request<{ history: HistoryDataPoint[] }>(`/api/dashboard/history${qs}`);
+  },
+
+  // 유사 공시
+  getSimilarDisclosures: (rceptNo: string, limit?: number) => {
+    const qs = limit ? `?limit=${limit}` : "";
+    return request<{ similar: SimilarDisclosure[] }>(`/api/disclosures/${rceptNo}/similar${qs}`);
+  },
 };
 
 // Types
@@ -102,4 +137,31 @@ export interface AppSettings {
   categories: string[];
   alert_categories: string[];
   disclosure_days: number;
+  alert_keywords: string[];
+}
+
+export interface Bookmark {
+  rcept_no: string;
+  corp_name: string;
+  report_nm: string;
+  memo: string;
+  created_at: string;
+}
+
+export interface HistoryDataPoint {
+  date: string;
+  count: number;
+  avg_score: number;
+  bullish: number;
+  bearish: number;
+}
+
+export interface SimilarDisclosure {
+  rcept_no: string;
+  corp_name: string;
+  report_nm: string;
+  rcept_dt: string;
+  category: string;
+  importance_score: number;
+  summary: string;
 }

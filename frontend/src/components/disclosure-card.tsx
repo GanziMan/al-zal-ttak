@@ -1,19 +1,32 @@
 "use client";
 
-import { useState } from "react";
-import { ExternalLink } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ExternalLink, Bookmark, BookmarkCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Disclosure } from "@/lib/api";
+import { api, Disclosure, SimilarDisclosure } from "@/lib/api";
 import { categoryColor, categoryBorder, categoryDot, formatDate, scoreColor } from "@/lib/disclosure-utils";
 import { cn } from "@/lib/utils";
 
 interface DisclosureCardProps {
   disclosure: Disclosure;
+  isBookmarked?: boolean;
+  onToggleBookmark?: (d: Disclosure) => void;
 }
 
-export function DisclosureCard({ disclosure }: DisclosureCardProps) {
+export function DisclosureCard({ disclosure, isBookmarked, onToggleBookmark }: DisclosureCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const [similar, setSimilar] = useState<SimilarDisclosure[] | null>(null);
+  const [similarLoaded, setSimilarLoaded] = useState(false);
   const analysis = disclosure.analysis;
+
+  useEffect(() => {
+    if (expanded && !similarLoaded && disclosure.rcept_no) {
+      setSimilarLoaded(true);
+      api.getSimilarDisclosures(disclosure.rcept_no).then((data) => {
+        setSimilar(data.similar);
+      }).catch(() => setSimilar([]));
+    }
+  }, [expanded, similarLoaded, disclosure.rcept_no]);
   const cat = analysis?.category || "단순정보";
   const score = analysis?.importance_score ?? 0;
 
@@ -50,21 +63,39 @@ export function DisclosureCard({ disclosure }: DisclosureCardProps) {
               </a>
             </h3>
           </div>
-          {analysis ? (
-            <div className="flex flex-col items-end gap-1.5 shrink-0">
-              <Badge variant="outline" className={cn("text-[10px] font-medium rounded-md", categoryColor[cat])}>
-                {cat}
-              </Badge>
-              <span className={cn("text-lg font-bold tabular-nums tracking-tighter", scoreColor(score))}>
-                {score}
-              </span>
-            </div>
-          ) : (
-            <div className="flex flex-col items-end gap-1.5 shrink-0">
-              <div className="h-5 w-12 rounded-md bg-muted animate-pulse" />
-              <div className="h-6 w-8 rounded bg-muted animate-pulse" />
-            </div>
-          )}
+          <div className="flex items-start gap-1.5 shrink-0">
+            {onToggleBookmark && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleBookmark(disclosure);
+                }}
+                className="p-1 rounded-md hover:bg-accent transition-colors"
+                aria-label={isBookmarked ? "북마크 해제" : "북마크"}
+              >
+                {isBookmarked ? (
+                  <BookmarkCheck className="h-4 w-4 text-primary" />
+                ) : (
+                  <Bookmark className="h-4 w-4 text-muted-foreground/50" />
+                )}
+              </button>
+            )}
+            {analysis ? (
+              <div className="flex flex-col items-end gap-1.5">
+                <Badge variant="outline" className={cn("text-[10px] font-medium rounded-md", categoryColor[cat])}>
+                  {cat}
+                </Badge>
+                <span className={cn("text-lg font-bold tabular-nums tracking-tighter", scoreColor(score))}>
+                  {score}
+                </span>
+              </div>
+            ) : (
+              <div className="flex flex-col items-end gap-1.5">
+                <div className="h-5 w-12 rounded-md bg-muted animate-pulse" />
+                <div className="h-6 w-8 rounded bg-muted animate-pulse" />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Action item */}
@@ -76,14 +107,60 @@ export function DisclosureCard({ disclosure }: DisclosureCardProps) {
 
             {/* Expandable AI summary */}
             {expanded && (
-              <div className="mt-3 glass-surface rounded-xl p-3.5">
-                <p className="text-[11px] font-semibold text-primary/70 mb-2">
-                  AI 분석 요약
-                </p>
-                <p className="text-[12px] leading-relaxed text-foreground/75 whitespace-pre-wrap">
-                  {analysis.summary}
-                </p>
-              </div>
+              <>
+                <div className="mt-3 glass-surface rounded-xl p-3.5">
+                  <p className="text-[11px] font-semibold text-primary/70 mb-2">
+                    AI 분석 요약
+                  </p>
+                  <p className="text-[12px] leading-relaxed text-foreground/75 whitespace-pre-wrap">
+                    {analysis.summary}
+                  </p>
+                </div>
+
+                {/* Similar disclosures */}
+                <div className="mt-3 glass-surface rounded-xl p-3.5">
+                  <p className="text-[11px] font-semibold text-primary/70 mb-2">
+                    유사 공시
+                  </p>
+                  {similar === null ? (
+                    <div className="flex items-center gap-2">
+                      <div className="h-3 w-3 rounded-full border-2 border-muted-foreground/30 border-t-primary animate-spin" />
+                      <span className="text-[11px] text-muted-foreground/50">검색 중...</span>
+                    </div>
+                  ) : similar.length === 0 ? (
+                    <p className="text-[11px] text-muted-foreground/50">유사한 공시가 없습니다</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {similar.map((s) => (
+                        <div key={s.rcept_no} className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] font-semibold text-foreground">{s.corp_name}</span>
+                              <Badge variant="outline" className={cn("text-[9px] rounded-md px-1 py-0", categoryColor[s.category])}>
+                                {s.category}
+                              </Badge>
+                              <span className={cn("text-[10px] font-bold tabular-nums", scoreColor(s.importance_score))}>
+                                {s.importance_score}
+                              </span>
+                            </div>
+                            <a
+                              href={`https://dart.fss.or.kr/dsaf001/main.do?rcept_no=${s.rcept_no}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[11px] text-foreground/70 hover:text-primary transition-colors line-clamp-1"
+                            >
+                              {s.report_nm}
+                            </a>
+                          </div>
+                          <span className="text-[10px] text-muted-foreground/50 tabular-nums shrink-0">
+                            {formatDate(s.rcept_dt)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
             )}
 
             <button
