@@ -6,7 +6,7 @@ AI 기반 한국 주식시장 DART 공시 분석 서비스
 
 ### 사전 준비
 
-- **Backend**: Python 3.12+
+- **Backend**: Docker (또는 Python 3.12+)
 - **Frontend**: Node.js 18+
 
 ### 환경 변수 설정
@@ -27,7 +27,30 @@ TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here   # 선택
 - `LLM_API_KEY` — [Google AI Studio](https://aistudio.google.com/)에서 발급
 - `TELEGRAM_BOT_TOKEN` — 텔레그램 알림 사용 시에만 필요
 
-### Backend
+### Backend (Docker)
+
+```bash
+docker compose up -d --build
+```
+
+서버가 `http://localhost:8000`에서 실행됩니다.
+
+API 문서: `http://localhost:8000/docs`
+
+로그 확인:
+
+```bash
+docker compose logs -f backend
+```
+
+종료:
+
+```bash
+docker compose down
+```
+
+<details>
+<summary>Docker 없이 직접 실행</summary>
 
 ```bash
 cd backend
@@ -37,9 +60,7 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-서버가 `http://localhost:8000`에서 실행됩니다.
-
-API 문서: `http://localhost:8000/docs`
+</details>
 
 ### Frontend
 
