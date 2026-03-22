@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { BarChart3 } from "lucide-react";
-import { api, HistoryDataPoint } from "@/lib/api";
+import { api, fetchWithRevalidate, HistoryDataPoint } from "@/lib/api";
 import { formatDateShort } from "@/lib/disclosure-utils";
 import { cn } from "@/lib/utils";
 
@@ -34,8 +34,12 @@ export function DisclosureHistoryChart() {
 
   useEffect(() => {
     setLoading(true);
-    api.getDisclosureHistory(days)
-      .then((res) => setData(res.history))
+    fetchWithRevalidate<{ history: HistoryDataPoint[] }>(
+      `/api/dashboard/history?days=${days}`,
+      (fresh) => setData(fresh.history),
+      `history_${days}`,
+    )
+      .then((cached) => { if (cached) setData(cached.history); })
       .catch(() => setData([]))
       .finally(() => setLoading(false));
   }, [days]);

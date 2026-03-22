@@ -11,6 +11,16 @@ DEFAULT_TIMEOUT = 30
 class DartClient:
     def __init__(self, api_key: str):
         self.api_key = api_key
+        self._client: httpx.AsyncClient | None = None
+
+    async def _get_client(self) -> httpx.AsyncClient:
+        if self._client is None or self._client.is_closed:
+            self._client = httpx.AsyncClient(timeout=DEFAULT_TIMEOUT)
+        return self._client
+
+    async def close(self) -> None:
+        if self._client and not self._client.is_closed:
+            await self._client.aclose()
 
     async def get_disclosure_list(
         self,
@@ -33,10 +43,10 @@ class DartClient:
         if end_de:
             params["end_de"] = end_de
 
-        async with httpx.AsyncClient(timeout=DEFAULT_TIMEOUT) as client:
-            resp = await client.get(f"{DART_BASE_URL}/list.json", params=params)
-            resp.raise_for_status()
-            return resp.json()
+        client = await self._get_client()
+        resp = await client.get(f"{DART_BASE_URL}/list.json", params=params)
+        resp.raise_for_status()
+        return resp.json()
 
     async def get_all_disclosures(
         self,
@@ -58,10 +68,10 @@ class DartClient:
             "end_de": end_de,
             "page_count": page_count,
         }
-        async with httpx.AsyncClient(timeout=DEFAULT_TIMEOUT) as client:
-            resp = await client.get(f"{DART_BASE_URL}/list.json", params=params)
-            resp.raise_for_status()
-            data = resp.json()
+        client = await self._get_client()
+        resp = await client.get(f"{DART_BASE_URL}/list.json", params=params)
+        resp.raise_for_status()
+        data = resp.json()
         if data.get("status") != "000":
             return []
         return data.get("list", [])
@@ -72,7 +82,7 @@ class DartClient:
             "crtfc_key": self.api_key,
             "corp_code": corp_code,
         }
-        async with httpx.AsyncClient(timeout=DEFAULT_TIMEOUT) as client:
-            resp = await client.get(f"{DART_BASE_URL}/company.json", params=params)
-            resp.raise_for_status()
-            return resp.json()
+        client = await self._get_client()
+        resp = await client.get(f"{DART_BASE_URL}/company.json", params=params)
+        resp.raise_for_status()
+        return resp.json()

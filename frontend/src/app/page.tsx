@@ -9,7 +9,7 @@ import {
 import { DisclosureHistoryChart } from "@/components/disclosure-history-chart";
 import { BookmarksSection } from "@/components/bookmarks-section";
 import { Skeleton } from "@/components/ui/skeleton";
-import { api, DashboardSummary } from "@/lib/api";
+import { api, fetchWithRevalidate, DashboardSummary } from "@/lib/api";
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardSummary | null>(null);
@@ -19,8 +19,11 @@ export default function DashboardPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const summary = await api.getDashboardSummary();
-        setData(summary);
+        const cached = await fetchWithRevalidate<DashboardSummary>(
+          "/api/dashboard/summary",
+          (fresh) => setData(fresh),
+        );
+        if (cached) setData(cached);
       } catch {
         setError("대시보드 데이터를 불러올 수 없습니다. 백엔드 서버를 확인하세요.");
       } finally {

@@ -2,6 +2,47 @@ import { getToken, removeToken } from "./auth";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+// --- SWR-style localStorage cache ---
+const CACHE_PREFIX = "api_cache:";
+const CACHE_TTL = 5 * 60 * 1000; // 5분
+
+interface CacheEntry<T> {
+  data: T;
+  ts: number;
+}
+
+function getCached<T>(key: string): T | null {
+  try {
+    const raw = localStorage.getItem(CACHE_PREFIX + key);
+    if (!raw) return null;
+    const entry: CacheEntry<T> = JSON.parse(raw);
+    // TTL 지나도 stale 데이터는 반환 (revalidate 중 표시용)
+    return entry.data;
+  } catch {
+    return null;
+  }
+}
+
+function setCache<T>(key: string, data: T) {
+  try {
+    const entry: CacheEntry<T> = { data, ts: Date.now() };
+    localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(entry));
+  } catch {
+    // localStorage full 등 무시
+  }
+}
+
+function isFresh(key: string): boolean {
+  try {
+    const raw = localStorage.getItem(CACHE_PREFIX + key);
+    if (!raw) return false;
+    const entry = JSON.parse(raw);
+    return Date.now() - entry.ts < CACHE_TTL;
+  } catch {
+    return false;
+  }
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const token = getToken();
   const res = await fetch(`${API_BASE}${path}`, {
@@ -14,8 +55,8 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   });
   if (res.status === 401) {
     removeToken();
-    const path = window.location.pathname;
-    if (path !== "/login" && !path.startsWith("/auth/")) {
+    const currentPath = window.location.pathname;
+    if (currentPath !== "/login" && !currentPath.startsWith("/auth/")) {
       window.location.href = "/login";
     }
     throw new Error("Unauthorized");
@@ -24,6 +65,52 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     throw new Error(`API error: ${res.status}`);
   }
   return res.json();
+}
+
+/** GET 요청에 대해 캐시된 데이터를 즉시 반환하고 백그라운드에서 revalidate */
+async function cachedGet<T>(path: string, cacheKey?: string): Promise<T> {
+  const key = cacheKey || path;
+  const cached = getCached<T>(key);
+
+  if (cached && isFresh(key)) {
+    return cached;
+  }
+
+  if (cached) {
+    // stale 데이터 즉시 반환, 백그라운드에서 갱신
+    request<T>(path).then((fresh) => setCache(key, fresh)).catch(() => {});
+    return cached;
+  }
+
+  // 캐시 없으면 네트워크 요청
+  const data = await request<T>(path);
+  setCache(key, data);
+  return data;
+}
+
+/** GET 요청 + 강제 revalidate (캐시 먼저 반환 후 콜백으로 새 데이터 전달) */
+export async function fetchWithRevalidate<T>(
+  path: string,
+  onUpdate: (data: T) => void,
+  cacheKey?: string,
+): Promise<T | null> {
+  const key = cacheKey || path;
+  const cached = getCached<T>(key);
+
+  // 캐시 있으면 즉시 반환
+  if (cached) {
+    // 백그라운드에서 새 데이터 가져와서 콜백
+    request<T>(path).then((fresh) => {
+      setCache(key, fresh);
+      onUpdate(fresh);
+    }).catch(() => {});
+    return cached;
+  }
+
+  // 캐시 없으면 기다림
+  const data = await request<T>(path);
+  setCache(key, data);
+  return data;
 }
 
 export const api = {

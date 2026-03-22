@@ -2,15 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { Bookmark, ExternalLink, Trash2 } from "lucide-react";
-import { api, Bookmark as BookmarkType } from "@/lib/api";
+import { api, fetchWithRevalidate, Bookmark as BookmarkType } from "@/lib/api";
 
 export function BookmarksSection() {
   const [bookmarks, setBookmarks] = useState<BookmarkType[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.getBookmarks()
-      .then((data) => setBookmarks(data.bookmarks))
+    fetchWithRevalidate<{ bookmarks: BookmarkType[] }>(
+      "/api/bookmarks",
+      (fresh) => setBookmarks(fresh.bookmarks),
+    )
+      .then((cached) => { if (cached) setBookmarks(cached.bookmarks); })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
