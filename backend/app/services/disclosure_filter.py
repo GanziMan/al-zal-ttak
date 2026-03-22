@@ -10,9 +10,12 @@ from app.services.watchlist import load_watchlist
 async def get_watchlist_disclosures(
     dart_client: DartClient,
     days: int = 1,
+    user_id: int | None = None,
+    watchlist: list[dict] | None = None,
 ) -> list[dict]:
     """관심 종목의 최근 공시만 필터링하여 반환"""
-    watchlist = await load_watchlist()
+    if watchlist is None:
+        watchlist = await load_watchlist(user_id) if user_id else []
     if not watchlist:
         return []
 

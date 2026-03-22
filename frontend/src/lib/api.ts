@@ -1,13 +1,22 @@
+import { getToken, removeToken } from "./auth";
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const token = getToken();
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options?.headers,
     },
   });
+  if (res.status === 401) {
+    removeToken();
+    window.location.href = "/login";
+    throw new Error("Unauthorized");
+  }
   if (!res.ok) {
     throw new Error(`API error: ${res.status}`);
   }
@@ -88,6 +97,9 @@ export const api = {
     const qs = limit ? `?limit=${limit}` : "";
     return request<{ similar: SimilarDisclosure[] }>(`/api/disclosures/${rceptNo}/similar${qs}`);
   },
+
+  // 인증
+  getMe: () => request<AuthUser>("/api/auth/me"),
 };
 
 // Types
@@ -164,4 +176,10 @@ export interface SimilarDisclosure {
   category: string;
   importance_score: number;
   summary: string;
+}
+
+export interface AuthUser {
+  id: number;
+  nickname: string;
+  profile_image: string;
 }

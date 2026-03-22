@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 import asyncio
-
 import logging
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
 
 from app.config import settings
+from app.dependencies import get_current_user
+from app.models.user import User
 from app.services.dart_client import DartClient
 from app.services.disclosure_filter import get_watchlist_disclosures
 from app.services.analysis_cache import get_cached_analysis, get_cached_full, save_analysis, search_similar
@@ -53,13 +54,12 @@ async def _enrich_one(d: dict) -> dict:
     return d
 
 
-async def _analyze_batch(disclosures: list[dict]) -> None:
+async def _analyze_batch(disclosures: list[dict], user_id: int) -> None:
     """백그라운드에서 미분석 공시를 배치 처리한다."""
     logger.info("Background analysis started for %d disclosures", len(disclosures))
     sem = asyncio.Semaphore(CONCURRENT_ANALYSIS_LIMIT)
 
-    # 텔레그램 알림 설정 1회 로드
-    user_settings = await load_settings()
+    user_settings = await load_settings(user_id)
     tg_enabled = user_settings.get("telegram_enabled", False)
     tg_chat_id = user_settings.get("telegram_chat_id", "")
     tg_categories = user_settings.get("alert_categories", [])
@@ -68,7 +68,6 @@ async def _analyze_batch(disclosures: list[dict]) -> None:
     async def _limited(d: dict) -> None:
         async with sem:
             await _enrich_one(d)
-            # 분석 완료 후 텔레그램 알림 조건 확인
             analysis = d.get("analysis")
             if (
                 tg_enabled
@@ -98,9 +97,9 @@ async def _analyze_batch(disclosures: list[dict]) -> None:
 
 
 @router.get("/count")
-async def get_disclosure_count(since: str = Query(None)):
+async def get_disclosure_count(since: str = Query(None), user: User = Depends(get_current_user)):
     dart_client = DartClient(api_key=settings.dart_api_key)
-    disclosures = await get_watchlist_disclosures(dart_client, days=7)
+    disclosures = await get_watchlist_disclosures(dart_client, days=7, user_id=user.id)
     if since:
         disclosures = [d for d in disclosures if d.get("rcept_dt", "") >= since]
     return {"count": len(disclosures)}
@@ -127,22 +126,21 @@ async def get_disclosures(
     days: int = Query(7, ge=1, le=30),
     category: str = Query(None, description="호재/악재/중립/단순정보"),
     min_score: int = Query(0, ge=0, le=100),
+    user: User = Depends(get_current_user),
 ):
     dart_client = DartClient(api_key=settings.dart_api_key)
-    disclosures = await get_watchlist_disclosures(dart_client, days=days)
+    disclosures = await get_watchlist_disclosures(dart_client, days=days, user_id=user.id)
 
-    # 즉시 반환: 캐시된 분석만 첨부
     pending = []
     for d in disclosures:
         rcept_no = d.get("rcept_no", "")
         cached = (await get_cached_analysis(rcept_no)) if rcept_no else None
-        d["analysis"] = cached  # None if not cached
+        d["analysis"] = cached
         if cached is None:
             pending.append(d)
 
-    # 미분석 건은 백그라운드 태스크로 처리 (fire-and-forget)
     if pending:
-        task = asyncio.create_task(_analyze_batch(pending))
+        task = asyncio.create_task(_analyze_batch(pending, user.id))
         _background_tasks.add(task)
         task.add_done_callback(_background_tasks.discard)
 

@@ -1,4 +1,4 @@
-"""사용자 설정 관리 (DB 기반)"""
+"""사용자 설정 관리 (DB 기반, 유저별)"""
 from __future__ import annotations
 
 from app.database import async_session
@@ -24,20 +24,20 @@ def _row_to_dict(row: Settings) -> dict:
     return {f: getattr(row, f) for f in FIELDS}
 
 
-async def load_settings() -> dict:
+async def load_settings(user_id: int) -> dict:
     async with async_session() as session:
-        row = await session.get(Settings, "default")
+        row = await session.get(Settings, user_id)
         if not row:
-            await save_settings(DEFAULT_SETTINGS)
+            await save_settings(user_id, DEFAULT_SETTINGS)
             return DEFAULT_SETTINGS.copy()
         return {**DEFAULT_SETTINGS, **_row_to_dict(row)}
 
 
-async def save_settings(data: dict):
+async def save_settings(user_id: int, data: dict):
     async with async_session() as session:
-        row = await session.get(Settings, "default")
+        row = await session.get(Settings, user_id)
         if not row:
-            row = Settings(key="default")
+            row = Settings(user_id=user_id)
             session.add(row)
         for f in FIELDS:
             if f in data:

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
+import { useAuth } from "@/components/auth-provider";
 
 const links = [
   { href: "/", label: "대시보드" },
@@ -30,6 +31,7 @@ const tabs = [
 
 export function Nav() {
   const pathname = usePathname();
+  const { user, isLoggedIn, logout } = useAuth();
   const [isDark, setIsDark] = useState(false);
   const [badgeCount, setBadgeCount] = useState(0);
 
@@ -103,12 +105,26 @@ export function Nav() {
             </nav>
           </div>
           <div className="flex items-center gap-2.5">
-            <div className="hidden sm:flex items-center gap-2 rounded-full bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 px-3 py-1">
-              <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
-                연결됨
-              </span>
-            </div>
+            {isLoggedIn ? (
+              <div className="hidden sm:flex items-center gap-2">
+                <span className="text-[12px] font-medium text-foreground">
+                  {user?.nickname}
+                </span>
+                <button
+                  onClick={logout}
+                  className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  로그아웃
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="hidden sm:inline-flex text-[12px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                로그인
+              </Link>
+            )}
             <button
               onClick={toggleTheme}
               className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"

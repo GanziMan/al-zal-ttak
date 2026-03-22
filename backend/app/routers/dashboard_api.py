@@ -3,9 +3,11 @@ from __future__ import annotations
 
 from collections import defaultdict
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
 
 from app.config import settings
+from app.dependencies import get_current_user
+from app.models.user import User
 from app.services.dart_client import DartClient
 from app.services.disclosure_filter import get_watchlist_disclosures
 from app.services.watchlist import load_watchlist
@@ -15,11 +17,11 @@ router = APIRouter()
 
 
 @router.get("/summary")
-async def get_summary():
-    watchlist = await load_watchlist()
+async def get_summary(user: User = Depends(get_current_user)):
+    watchlist = await load_watchlist(user.id)
     dart_client = DartClient(api_key=settings.dart_api_key)
 
-    disclosures = await get_watchlist_disclosures(dart_client, days=7) if watchlist else []
+    disclosures = await get_watchlist_disclosures(dart_client, days=7, watchlist=watchlist) if watchlist else []
 
     bullish = 0
     bearish = 0
@@ -50,22 +52,20 @@ async def get_summary():
 
 
 @router.get("/history")
-async def get_history(days: int = Query(30, ge=1, le=90)):
-    watchlist = await load_watchlist()
+async def get_history(days: int = Query(30, ge=1, le=90), user: User = Depends(get_current_user)):
+    watchlist = await load_watchlist(user.id)
     if not watchlist:
         return {"history": []}
 
     dart_client = DartClient(api_key=settings.dart_api_key)
-    disclosures = await get_watchlist_disclosures(dart_client, days=days)
+    disclosures = await get_watchlist_disclosures(dart_client, days=days, watchlist=watchlist)
 
-    # 분석 캐시가 있으면 붙이기
     for d in disclosures:
         rcept_no = d.get("rcept_no", "")
         cached = (await get_cached_analysis(rcept_no)) if rcept_no else None
         if cached:
             d["analysis"] = cached
 
-    # 날짜별 집계
     by_date: dict[str, list[dict]] = defaultdict(list)
     for d in disclosures:
         dt = d.get("rcept_dt", "")

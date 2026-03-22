@@ -1,4 +1,4 @@
-from sqlalchemy import String, Integer, Boolean, JSON
+from sqlalchemy import String, Integer, Boolean, JSON, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from app.models import Base
 
@@ -6,7 +6,7 @@ from app.models import Base
 class Settings(Base):
     __tablename__ = "settings"
 
-    key: Mapped[str] = mapped_column(String, primary_key=True, default="default")
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), primary_key=True)
     telegram_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     telegram_chat_id: Mapped[str] = mapped_column(String, default="")
     min_importance_score: Mapped[int] = mapped_column(Integer, default=30)
