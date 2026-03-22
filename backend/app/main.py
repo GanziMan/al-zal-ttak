@@ -21,6 +21,7 @@ from app.services.telegram import send_alert, format_disclosure_alert, format_ke
 from app.models.watchlist import Watchlist
 from app.routers import corp_search_api, watchlist_api, disclosure_api, dashboard_api, settings_api, bookmarks_api, auth_api
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 AUTO_SCAN_INTERVAL = 30 * 60  # 30분
@@ -115,12 +116,17 @@ async def _auto_scan_loop() -> None:
 async def _download_corps_background() -> None:
     """DB에 기업코드가 없으면 DART에서 다운로드"""
     try:
+        logger.info("Checking corp codes in DB...")
         cached = await load_cached_corps()
+        logger.info("Found %d corp codes in DB", len(cached))
         if not cached and settings.dart_api_key:
+            logger.info("No corp codes found, downloading from DART...")
             await download_corp_codes(settings.dart_api_key)
             logger.info("Corp codes downloaded successfully")
+        elif not settings.dart_api_key:
+            logger.warning("DART_API_KEY is not set, skipping corp code download")
     except Exception:
-        logger.warning("Failed to download corp codes, will retry later")
+        logger.exception("Failed to download corp codes")
 
 
 @asynccontextmanager
