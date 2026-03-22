@@ -191,3 +191,48 @@ class DartClient:
         resp = await client.get(f"{DART_BASE_URL}/company.json", params=params)
         resp.raise_for_status()
         return resp.json()
+
+    async def get_financial_statements(
+        self, corp_code: str, bsns_year: str, reprt_code: str = "11011",
+    ) -> dict:
+        """단일회사 주요계정 조회 (재무제표)"""
+        params = {
+            "crtfc_key": self.api_key,
+            "corp_code": corp_code,
+            "bsns_year": bsns_year,
+            "reprt_code": reprt_code,
+        }
+        client = await self._get_client()
+        resp = await client.get(f"{DART_BASE_URL}/fnlttSinglAcnt.json", params=params)
+        resp.raise_for_status()
+        return resp.json()
+
+    async def get_dividends(
+        self, corp_code: str, bsns_year: str, reprt_code: str = "11011",
+    ) -> dict:
+        """배당에 관한 사항 조회"""
+        params = {
+            "crtfc_key": self.api_key,
+            "corp_code": corp_code,
+            "bsns_year": bsns_year,
+            "reprt_code": reprt_code,
+        }
+        client = await self._get_client()
+        resp = await client.get(f"{DART_BASE_URL}/alotMatter.json", params=params)
+        resp.raise_for_status()
+        return resp.json()
+
+    async def get_major_shareholders(
+        self, corp_code: str, bsns_year: str, reprt_code: str = "11011",
+    ) -> dict:
+        """최대주주 현황 조회"""
+        params = {
+            "crtfc_key": self.api_key,
+            "corp_code": corp_code,
+            "bsns_year": bsns_year,
+            "reprt_code": reprt_code,
+        }
+        client = await self._get_client()
+        resp = await client.get(f"{DART_BASE_URL}/hyslrSttus.json", params=params)
+        resp.raise_for_status()
+        return resp.json()

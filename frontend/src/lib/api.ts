@@ -188,6 +188,20 @@ export const api = {
     return request<{ similar: SimilarDisclosure[] }>(`/api/disclosures/${rceptNo}/similar${qs}`);
   },
 
+  // 기업 재무
+  getCompanySummary: (corpCode: string) =>
+    request<CompanySummary>(`/api/company/${corpCode}/summary`),
+  getCompanyFinancials: (corpCode: string, years?: number) => {
+    const qs = years ? `?years=${years}` : "";
+    return request<{ financials: FinancialYear[] }>(`/api/company/${corpCode}/financials${qs}`);
+  },
+  getCompanyDividends: (corpCode: string, years?: number) => {
+    const qs = years ? `?years=${years}` : "";
+    return request<{ dividends: DividendYear[] }>(`/api/company/${corpCode}/dividends${qs}`);
+  },
+  getCompanyShareholders: (corpCode: string) =>
+    request<{ shareholders: ShareholderInfo[] }>(`/api/company/${corpCode}/shareholders`),
+
   // 인증
   getMe: () => request<AuthUser>("/api/auth/me"),
 };
@@ -266,6 +280,47 @@ export interface SimilarDisclosure {
   category: string;
   importance_score: number;
   summary: string;
+}
+
+// 기업 재무 데이터
+export interface FinancialAccount {
+  account: string;
+  amount: number;
+  amount_raw: string;
+}
+
+export interface FinancialYear {
+  year: string;
+  accounts: FinancialAccount[];
+}
+
+export interface DividendYear {
+  year: string;
+  dividends: Array<Record<string, string>>;
+}
+
+export interface ShareholderInfo {
+  name: string;
+  relation: string;
+  shares_raw: string;
+  ownership_pct: string;
+}
+
+export interface CompanyInfo {
+  corp_name: string;
+  corp_name_eng: string;
+  stock_code: string;
+  ceo_nm: string;
+  induty_code: string;
+  est_dt: string;
+  hm_url: string;
+}
+
+export interface CompanySummary {
+  company: CompanyInfo;
+  financials: FinancialYear[];
+  dividends: DividendYear[];
+  shareholders: ShareholderInfo[];
 }
 
 export interface AuthUser {

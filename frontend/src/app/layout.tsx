@@ -63,6 +63,9 @@ export const metadata: Metadata = {
   alternates: {
     canonical: SITE_URL,
   },
+  verification: {
+    google: "42dxIfcyJlfL_sxBemEF70hIDkHDJa4XGH6dhKXVed8",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -70,6 +73,7 @@ export const metadata: Metadata = {
   },
   other: {
     "mobile-web-app-capable": "yes",
+    "naver-site-verification": "d9d666d229324a6e08e076c55e9303c90a1e0b5e",
   },
 };
 

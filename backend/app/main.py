@@ -19,7 +19,7 @@ from app.routers.disclosure_api import _enrich_one
 from app.services.settings import load_settings
 from app.services.telegram import send_alert, format_disclosure_alert, format_keyword_alert
 from app.models.watchlist import Watchlist
-from app.routers import corp_search_api, watchlist_api, disclosure_api, dashboard_api, settings_api, bookmarks_api, auth_api
+from app.routers import corp_search_api, watchlist_api, disclosure_api, dashboard_api, settings_api, bookmarks_api, auth_api, financial_api
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -186,6 +186,7 @@ app.include_router(disclosure_api.router, prefix="/api/disclosures", tags=["공�
 app.include_router(dashboard_api.router, prefix="/api/dashboard", tags=["대시보드"])
 app.include_router(settings_api.router, prefix="/api/settings", tags=["설정"])
 app.include_router(bookmarks_api.router, prefix="/api/bookmarks", tags=["북마크"])
+app.include_router(financial_api.router, prefix="/api/company", tags=["기업 재무"])
 
 
 @app.get("/health")

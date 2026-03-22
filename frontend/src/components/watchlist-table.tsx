@@ -32,7 +32,7 @@ export function WatchlistTable({ items, onRemove }: WatchlistTableProps) {
             className="glass-card rounded-2xl p-4 flex items-center justify-between"
           >
             <Link
-              href={`/disclosures?corp_code=${item.corp_code}`}
+              href={`/company/${item.corp_code}`}
               className="min-w-0 flex-1"
             >
               <p className="text-[13px] font-semibold text-foreground hover:text-primary transition-colors">
@@ -82,7 +82,7 @@ export function WatchlistTable({ items, onRemove }: WatchlistTableProps) {
             className="group grid grid-cols-[1fr_100px_100px_80px] gap-4 items-center border-b border-border/30 last:border-0 px-4 py-3 hover:bg-accent/30 transition-colors"
           >
             <Link
-              href={`/disclosures?corp_code=${item.corp_code}`}
+              href={`/company/${item.corp_code}`}
               className="text-[13px] font-semibold text-foreground group-hover:text-primary hover:underline transition-colors"
             >
               {item.corp_name}
