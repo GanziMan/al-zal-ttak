@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Disclosure } from "@/lib/api";
 import { categoryColor, categoryBorder, categoryDot, formatDate, scoreColor } from "@/lib/disclosure-utils";
@@ -19,7 +20,7 @@ export function DisclosureCard({ disclosure }: DisclosureCardProps) {
   return (
     <article
       className={cn(
-        "rounded-xl border border-border bg-white card-elevated border-l-[3px] transition-all hover:shadow-md",
+        "glass-card rounded-2xl border-l-[3px] transition-all hover:shadow-md",
         categoryBorder[cat] || "border-l-zinc-300"
       )}
     >
@@ -37,7 +38,16 @@ export function DisclosureCard({ disclosure }: DisclosureCardProps) {
               </span>
             </div>
             <h3 className="text-[13px] font-medium leading-snug text-foreground/85">
-              {disclosure.report_nm}
+              <a
+                href={`https://dart.fss.or.kr/dsaf001/main.do?rcept_no=${disclosure.rcept_no}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group/link inline-flex items-center gap-1 hover:text-primary transition-colors"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {disclosure.report_nm}
+                <ExternalLink className="h-3 w-3 opacity-0 group-hover/link:opacity-60 transition-opacity shrink-0" />
+              </a>
             </h3>
           </div>
           {analysis ? (
@@ -66,7 +76,7 @@ export function DisclosureCard({ disclosure }: DisclosureCardProps) {
 
             {/* Expandable AI summary */}
             {expanded && (
-              <div className="mt-3 rounded-lg border border-border bg-accent/30 p-3.5">
+              <div className="mt-3 glass-surface rounded-xl p-3.5">
                 <p className="text-[11px] font-semibold text-primary/70 mb-2">
                   AI 분석 요약
                 </p>
@@ -77,7 +87,7 @@ export function DisclosureCard({ disclosure }: DisclosureCardProps) {
             )}
 
             <button
-              className="mt-2.5 text-[11px] font-semibold text-primary/70 hover:text-primary transition-colors"
+              className="mt-2.5 min-h-[44px] flex items-center text-[11px] font-semibold text-primary/70 hover:text-primary transition-colors"
               onClick={() => setExpanded(!expanded)}
             >
               {expanded ? "분석 숨기기" : "분석 보기"}

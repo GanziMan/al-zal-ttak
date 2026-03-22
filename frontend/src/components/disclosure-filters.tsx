@@ -26,12 +26,12 @@ export function DisclosureFilters({
   onMinScoreChange,
 }: DisclosureFiltersProps) {
   return (
-    <div className="flex flex-wrap items-center gap-2.5">
-      <span className="text-[11px] font-medium text-muted-foreground mr-0.5">
+    <div className="flex items-center gap-2.5 overflow-x-auto scrollbar-hide">
+      <span className="text-[11px] font-medium text-muted-foreground mr-0.5 shrink-0">
         필터
       </span>
       <Select value={category} onValueChange={(v) => v && onCategoryChange(v)}>
-        <SelectTrigger className="h-8 w-[130px] text-xs bg-white border-border rounded-lg">
+        <SelectTrigger className="h-9 w-[130px] text-xs bg-card border-border rounded-xl shrink-0">
           <SelectValue placeholder="카테고리" />
         </SelectTrigger>
         <SelectContent>
@@ -44,7 +44,7 @@ export function DisclosureFilters({
       </Select>
 
       <Select value={String(days)} onValueChange={(v) => v && onDaysChange(Number(v))}>
-        <SelectTrigger className="h-8 w-[100px] text-xs bg-white border-border rounded-lg">
+        <SelectTrigger className="h-9 w-[100px] text-xs bg-card border-border rounded-xl shrink-0">
           <SelectValue placeholder="기간" />
         </SelectTrigger>
         <SelectContent>
@@ -57,7 +57,7 @@ export function DisclosureFilters({
       </Select>
 
       <Select value={String(minScore)} onValueChange={(v) => v && onMinScoreChange(Number(v))}>
-        <SelectTrigger className="h-8 w-[120px] text-xs bg-white border-border rounded-lg">
+        <SelectTrigger className="h-9 w-[120px] text-xs bg-card border-border rounded-xl shrink-0">
           <SelectValue placeholder="점수" />
         </SelectTrigger>
         <SelectContent>

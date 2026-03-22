@@ -11,6 +11,8 @@ from app.config import settings
 from app.services.dart_client import DartClient
 from app.services.disclosure_filter import get_watchlist_disclosures
 from app.services.analysis_cache import get_cached_analysis, save_analysis
+from app.services.settings import load_settings
+from app.services.telegram import send_alert, format_disclosure_alert
 from app.agents.runner import analyze_disclosure
 
 logger = logging.getLogger(__name__)
@@ -52,9 +54,37 @@ async def _analyze_batch(disclosures: list[dict]) -> None:
     logger.info("Background analysis started for %d disclosures", len(disclosures))
     sem = asyncio.Semaphore(CONCURRENT_ANALYSIS_LIMIT)
 
+    # 텔레그램 알림 설정 1회 로드
+    user_settings = load_settings()
+    tg_enabled = user_settings.get("telegram_enabled", False)
+    tg_chat_id = user_settings.get("telegram_chat_id", "")
+    tg_categories = user_settings.get("alert_categories", [])
+    tg_min_score = user_settings.get("min_importance_score", 0)
+
     async def _limited(d: dict) -> None:
         async with sem:
             await _enrich_one(d)
+            # 분석 완료 후 텔레그램 알림 조건 확인
+            analysis = d.get("analysis")
+            if (
+                tg_enabled
+                and tg_chat_id
+                and settings.telegram_bot_token
+                and analysis
+            ):
+                cat = analysis.get("category", "")
+                score = analysis.get("importance_score", 0)
+                if cat in tg_categories and score >= tg_min_score:
+                    msg = format_disclosure_alert(
+                        corp_name=d.get("corp_name", ""),
+                        title=d.get("report_nm", ""),
+                        category=cat,
+                        importance=score,
+                        summary=analysis.get("summary", ""),
+                        action_item=analysis.get("action_item", ""),
+                        rcept_no=d.get("rcept_no", ""),
+                    )
+                    await send_alert(settings.telegram_bot_token, tg_chat_id, msg)
 
     try:
         await asyncio.gather(*[_limited(d) for d in disclosures])

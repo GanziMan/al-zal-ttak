@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
+import { Send, SlidersHorizontal } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -22,7 +24,6 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -46,10 +47,9 @@ export default function SettingsPage() {
     try {
       const updated = await api.updateSettings(settings);
       setSettings(updated);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+      toast.success("설정이 저장되었습니다");
     } catch {
-      setError("설정 저장에 실패했습니다.");
+      toast.error("설정 저장에 실패했습니다.");
     } finally {
       setSaving(false);
     }
@@ -67,7 +67,7 @@ export default function SettingsPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-xl font-bold tracking-tight">설정</h1>
+          <h1 className="text-2xl font-bold tracking-tight">설정</h1>
           <p className="text-[12px] text-muted-foreground mt-0.5">설정을 불러오는 중...</p>
         </div>
       </div>
@@ -77,16 +77,16 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-xl font-bold tracking-tight">설정</h1>
+        <h1 className="text-2xl font-bold tracking-tight">설정</h1>
         <p className="text-[12px] text-muted-foreground mt-0.5">
           알림 및 필터를 설정하세요
         </p>
       </div>
 
       {/* Telegram Section */}
-      <div className="rounded-xl border border-border bg-white card-elevated overflow-hidden">
-        <div className="border-b border-border px-4 py-3 flex items-center gap-2">
-          <span className="text-sm">✈</span>
+      <div className="glass-card rounded-2xl overflow-hidden">
+        <div className="border-b border-border/30 px-4 py-3 flex items-center gap-2">
+          <Send className="h-4 w-4 text-primary/60" />
           <h2 className="text-[12px] font-semibold text-muted-foreground">
             텔레그램 알림
           </h2>
@@ -111,16 +111,16 @@ export default function SettingsPage() {
                 setSettings({ ...settings, telegram_chat_id: e.target.value })
               }
               placeholder="텔레그램 채팅 ID를 입력하세요"
-              className="h-9 bg-white border-border text-sm rounded-lg"
+              className="h-9 bg-card border-border text-sm rounded-xl"
             />
           </div>
         </div>
       </div>
 
       {/* Alert Filters Section */}
-      <div className="rounded-xl border border-border bg-white card-elevated overflow-hidden">
-        <div className="border-b border-border px-4 py-3 flex items-center gap-2">
-          <span className="text-sm">◈</span>
+      <div className="glass-card rounded-2xl overflow-hidden">
+        <div className="border-b border-border/30 px-4 py-3 flex items-center gap-2">
+          <SlidersHorizontal className="h-4 w-4 text-primary/60" />
           <h2 className="text-[12px] font-semibold text-muted-foreground">
             알림 필터
           </h2>
@@ -158,7 +158,7 @@ export default function SettingsPage() {
                 v && setSettings({ ...settings, min_importance_score: Number(v) })
               }
             >
-              <SelectTrigger className="h-9 w-[160px] text-sm bg-white border-border rounded-lg">
+              <SelectTrigger className="h-9 w-[160px] text-sm bg-card border-border rounded-xl">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -179,7 +179,7 @@ export default function SettingsPage() {
                 v && setSettings({ ...settings, disclosure_days: Number(v) })
               }
             >
-              <SelectTrigger className="h-9 w-[160px] text-sm bg-white border-border rounded-lg">
+              <SelectTrigger className="h-9 w-[160px] text-sm bg-card border-border rounded-xl">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -195,7 +195,7 @@ export default function SettingsPage() {
       </div>
 
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[12px] text-red-700">
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[12px] text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
           {error}
         </div>
       )}
@@ -204,13 +204,10 @@ export default function SettingsPage() {
         <Button
           onClick={handleSave}
           disabled={saving}
-          className="h-9 text-[12px] rounded-lg"
+          className="h-9 w-full sm:w-auto text-[12px] rounded-xl"
         >
           {saving ? "저장 중..." : "설정 저장"}
         </Button>
-        {saved && (
-          <span className="text-[12px] text-emerald-600 font-medium">저장 완료</span>
-        )}
       </div>
     </div>
   );

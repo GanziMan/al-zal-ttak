@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { api, Corp } from "@/lib/api";
 
@@ -51,14 +52,12 @@ export function StockSearch({ onSelect }: StockSearchProps) {
   return (
     <div ref={ref} className="relative w-full max-w-md">
       <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/40 text-sm">
-          ⌕
-        </span>
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
         <Input
           placeholder="종목 검색... (예: 삼성전자)"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="h-10 pl-8 bg-white border-border text-sm placeholder:text-muted-foreground/50 rounded-xl focus:border-primary/40 transition-colors"
+          className="h-12 sm:h-10 pl-9 bg-card border-border text-sm placeholder:text-muted-foreground/50 rounded-xl focus:border-primary/40 transition-colors"
         />
         {loading && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-primary/60 font-medium">
@@ -67,11 +66,11 @@ export function StockSearch({ onSelect }: StockSearchProps) {
         )}
       </div>
       {open && (
-        <div className="absolute z-10 mt-1.5 w-full rounded-xl border border-border bg-white shadow-lg overflow-hidden">
+        <div className="absolute z-10 mt-1.5 w-full glass-card rounded-2xl overflow-hidden shadow-lg">
           {results.map((corp) => (
             <button
               key={corp.corp_code}
-              className="flex w-full items-center justify-between px-4 py-3 text-sm hover:bg-accent/50 transition-colors border-b border-border last:border-0"
+              className="flex w-full items-center justify-between px-4 min-h-[44px] py-3 text-sm hover:bg-accent/50 transition-colors border-b border-border/30 last:border-0"
               onClick={() => {
                 onSelect(corp);
                 setQuery("");

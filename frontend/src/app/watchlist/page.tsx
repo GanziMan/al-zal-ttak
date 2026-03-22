@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import { StockSearch } from "@/components/stock-search";
 import { WatchlistTable } from "@/components/watchlist-table";
 import { api, Corp, WatchlistItem } from "@/lib/api";
@@ -35,24 +36,27 @@ export default function WatchlistPage() {
         stock_code: corp.stock_code,
       });
       setWatchlist(data.watchlist);
+      toast.success(`${corp.corp_name} 추가됨`);
     } catch {
-      setError("종목 추가에 실패했습니다.");
+      toast.error("종목 추가에 실패했습니다.");
     }
   }
 
   async function handleRemove(corpCode: string) {
+    const name = watchlist.find((w) => w.corp_code === corpCode)?.corp_name ?? corpCode;
     try {
       const data = await api.removeFromWatchlist(corpCode);
       setWatchlist(data.watchlist);
+      toast.success(`${name} 삭제됨`);
     } catch {
-      setError("종목 삭제에 실패했습니다.");
+      toast.error("종목 삭제에 실패했습니다.");
     }
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold tracking-tight">관심종목</h1>
+        <h1 className="text-2xl font-bold tracking-tight">관심종목</h1>
         <p className="text-[12px] text-muted-foreground mt-0.5">
           관심 종목을 관리하세요
         </p>
@@ -61,13 +65,13 @@ export default function WatchlistPage() {
       <StockSearch onSelect={handleAdd} />
 
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[12px] text-red-700">
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[12px] text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
           {error}
         </div>
       )}
 
       {loading ? (
-        <Skeleton className="h-52 rounded-xl" />
+        <Skeleton className="h-52 rounded-2xl" />
       ) : (
         <WatchlistTable items={watchlist} onRemove={handleRemove} />
       )}

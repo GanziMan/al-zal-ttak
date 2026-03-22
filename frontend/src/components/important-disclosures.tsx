@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { AlertTriangle, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Disclosure } from "@/lib/api";
 import { categoryColor, categoryDot, formatDateShort, scoreColor } from "@/lib/disclosure-utils";
 import { cn } from "@/lib/utils";
@@ -12,9 +14,9 @@ interface ImportantDisclosuresProps {
 
 export function ImportantDisclosures({ disclosures }: ImportantDisclosuresProps) {
   return (
-    <div className="rounded-xl border border-border bg-white card-elevated overflow-hidden">
-      <div className="border-b border-border px-4 py-3 flex items-center gap-2">
-        <div className="h-2 w-2 rounded-full bg-red-500" />
+    <div className="glass-card rounded-2xl overflow-hidden">
+      <div className="border-b border-border/30 px-4 py-3 flex items-center gap-2">
+        <AlertTriangle className="h-4 w-4 text-red-500" />
         <h2 className="text-[12px] font-semibold text-muted-foreground">
           주요 공시
         </h2>
@@ -23,9 +25,12 @@ export function ImportantDisclosures({ disclosures }: ImportantDisclosuresProps)
         <div className="px-4 py-12 text-center">
           <p className="text-sm text-muted-foreground">주요 공시가 없습니다</p>
           <p className="mt-1 text-[11px] text-muted-foreground/60">중요 공시 발견 시 이곳에 표시됩니다</p>
+          <Link href="/watchlist" className="mt-3 inline-block">
+            <Button variant="outline" size="sm">관심종목 추가하기</Button>
+          </Link>
         </div>
       ) : (
-        <div className="divide-y divide-border">
+        <div className="divide-y divide-border/30">
           {disclosures.map((d) => {
             const cat = d.analysis?.category || "단순정보";
             const score = d.analysis?.importance_score ?? 0;
@@ -75,9 +80,9 @@ interface RecentTimelineProps {
 
 export function RecentTimeline({ disclosures }: RecentTimelineProps) {
   return (
-    <div className="rounded-xl border border-border bg-white card-elevated overflow-hidden">
-      <div className="border-b border-border px-4 py-3 flex items-center gap-2">
-        <div className="h-2 w-2 rounded-full bg-primary/60" />
+    <div className="glass-card rounded-2xl overflow-hidden">
+      <div className="border-b border-border/30 px-4 py-3 flex items-center gap-2">
+        <Clock className="h-4 w-4 text-primary/60" />
         <h2 className="text-[12px] font-semibold text-muted-foreground">
           최신 공시
         </h2>
@@ -88,9 +93,12 @@ export function RecentTimeline({ disclosures }: RecentTimelineProps) {
           <p className="mt-1 text-[11px] text-muted-foreground/60">
             관심종목을 추가하면 공시가 표시됩니다
           </p>
+          <Link href="/watchlist" className="mt-3 inline-block">
+            <Button variant="outline" size="sm">관심종목 추가하기</Button>
+          </Link>
         </div>
       ) : (
-        <div className="divide-y divide-border">
+        <div className="divide-y divide-border/30">
           {disclosures.map((d) => (
             <Link
               key={d.rcept_no}

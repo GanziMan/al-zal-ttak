@@ -76,7 +76,7 @@
   --chart-3: oklch(0.50 0.20 25);
   --chart-4: oklch(0.55 0.12 80);
   --chart-5: oklch(0.50 0.15 310);
-  --radius: 0.625rem;
+  --radius: 0.75rem;
   --sidebar: oklch(0.98 0.005 270);
   --sidebar-foreground: oklch(0.15 0.01 270);
   --sidebar-primary: oklch(0.35 0.15 270);
@@ -85,6 +85,52 @@
   --sidebar-accent-foreground: oklch(0.15 0.01 270);
   --sidebar-border: oklch(0.90 0.005 270);
   --sidebar-ring: oklch(0.35 0.15 270);
+
+  --glass-bg: oklch(1 0 0 / 0.6);
+  --glass-border: oklch(0.90 0.005 270 / 0.5);
+  --glass-shadow: oklch(0.15 0.01 270 / 0.04);
+  --glass-blur: 12px;
+  --bottom-nav-height: 4.5rem;
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.dark {
+  --background: oklch(0.13 0.01 270);
+  --foreground: oklch(0.93 0.005 270);
+  --card: oklch(0.17 0.01 270);
+  --card-foreground: oklch(0.93 0.005 270);
+  --popover: oklch(0.17 0.01 270);
+  --popover-foreground: oklch(0.93 0.005 270);
+  --primary: oklch(0.65 0.15 270);
+  --primary-foreground: oklch(0.13 0.01 270);
+  --secondary: oklch(0.22 0.01 270);
+  --secondary-foreground: oklch(0.90 0.005 270);
+  --muted: oklch(0.22 0.01 270);
+  --muted-foreground: oklch(0.60 0.01 270);
+  --accent: oklch(0.22 0.01 270);
+  --accent-foreground: oklch(0.93 0.005 270);
+  --destructive: oklch(0.55 0.22 25);
+  --border: oklch(0.25 0.01 270);
+  --input: oklch(0.25 0.01 270);
+  --ring: oklch(0.65 0.15 270);
+  --chart-1: oklch(0.65 0.15 270);
+  --chart-2: oklch(0.55 0.15 155);
+  --chart-3: oklch(0.55 0.20 25);
+  --chart-4: oklch(0.60 0.12 80);
+  --chart-5: oklch(0.55 0.15 310);
+  --sidebar: oklch(0.15 0.01 270);
+  --sidebar-foreground: oklch(0.93 0.005 270);
+  --sidebar-primary: oklch(0.65 0.15 270);
+  --sidebar-primary-foreground: oklch(0.13 0.01 270);
+  --sidebar-accent: oklch(0.22 0.01 270);
+  --sidebar-accent-foreground: oklch(0.93 0.005 270);
+  --sidebar-border: oklch(0.25 0.01 270);
+  --sidebar-ring: oklch(0.65 0.15 270);
+
+  --glass-bg: oklch(0.17 0.01 270 / 0.6);
+  --glass-border: oklch(0.30 0.01 270 / 0.5);
+  --glass-shadow: oklch(0 0 0 / 0.2);
+  --glass-blur: 12px;
 }
 
 @layer base {
@@ -93,18 +139,85 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-image: radial-gradient(ellipse at 50% 0%, oklch(0.92 0.02 270 / 0.15) 0%, transparent 60%);
+    background-attachment: fixed;
+  }
+  .dark body {
+    background-image: radial-gradient(ellipse at 50% 0%, oklch(0.25 0.03 270 / 0.2) 0%, transparent 60%);
   }
   html {
     @apply font-sans;
   }
 }
 
+/* Glass card */
+.glass-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 2px 8px var(--glass-shadow);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+}
+
+/* Glass navigation */
+.glass-nav {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+/* Glass surface (inner panels) */
+.glass-surface {
+  background: oklch(0.96 0.005 270 / 0.5);
+  border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.dark .glass-surface {
+  background: oklch(0.20 0.01 270 / 0.5);
+}
+
+/* Fallback for browsers without backdrop-filter */
+@supports not (backdrop-filter: blur(1px)) {
+  .glass-card {
+    background: var(--card);
+    border-color: var(--border);
+  }
+  .glass-nav {
+    background: var(--card);
+    border-color: var(--border);
+  }
+  .glass-surface {
+    background: var(--accent);
+    border-color: var(--border);
+  }
+}
+
 /* Elevated card */
 .card-elevated {
-  box-shadow: 0 1px 3px oklch(0.15 0.01 270 / 0.06), 0 1px 2px oklch(0.15 0.01 270 / 0.04);
+  box-shadow: 0 1px 4px oklch(0.15 0.01 270 / 0.05), 0 1px 2px oklch(0.15 0.01 270 / 0.03);
+}
+
+.dark .card-elevated {
+  box-shadow: 0 1px 4px oklch(0 0 0 / 0.25), 0 1px 2px oklch(0 0 0 / 0.15);
 }
 
 /* Card background */
 .card-gradient {
   background: oklch(1 0 0);
+}
+
+.dark .card-gradient {
+  background: oklch(0.17 0.01 270);
+}
+
+/* Hide scrollbar */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }

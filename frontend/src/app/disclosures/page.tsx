@@ -3,8 +3,10 @@
 import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
 import { DisclosureFilters } from "@/components/disclosure-filters";
 import { DisclosureCard } from "@/components/disclosure-card";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, Disclosure } from "@/lib/api";
 
@@ -16,30 +18,36 @@ function DisclosuresContent() {
   const [disclosures, setDisclosures] = useState<Disclosure[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [category, setCategory] = useState("all");
-  const [days, setDays] = useState(7);
-  const [minScore, setMinScore] = useState(0);
+  const [category, setCategory] = useState(searchParams.get("category") || "all");
+  const [days, setDays] = useState(Number(searchParams.get("days")) || 7);
+  const [minScore, setMinScore] = useState(Number(searchParams.get("min_score")) || 0);
   const [pendingAnalysis, setPendingAnalysis] = useState(0);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const prevPendingRef = useRef(0);
 
-  const clearCorpFilter = useCallback(() => {
-    router.replace("/disclosures");
+  const updateURL = useCallback((newCat: string, newDays: number, newScore: number) => {
+    const params = new URLSearchParams();
+    if (newCat !== "all") params.set("category", newCat);
+    if (newDays !== 7) params.set("days", String(newDays));
+    if (newScore > 0) params.set("min_score", String(newScore));
+    const qs = params.toString();
+    router.replace(qs ? `/disclosures?${qs}` : "/disclosures");
   }, [router]);
 
   const handleCategoryChange = useCallback((v: string) => {
     setCategory(v);
-    if (corpCode) clearCorpFilter();
-  }, [corpCode, clearCorpFilter]);
+    updateURL(v, days, minScore);
+  }, [days, minScore, updateURL]);
 
   const handleDaysChange = useCallback((v: number) => {
     setDays(v);
-    if (corpCode) clearCorpFilter();
-  }, [corpCode, clearCorpFilter]);
+    updateURL(category, v, minScore);
+  }, [category, minScore, updateURL]);
 
   const handleMinScoreChange = useCallback((v: number) => {
     setMinScore(v);
-    if (corpCode) clearCorpFilter();
-  }, [corpCode, clearCorpFilter]);
+    updateURL(category, days, v);
+  }, [category, days, updateURL]);
 
   const fetchDisclosures = useCallback(async (isPolling = false) => {
     if (!isPolling) setLoading(true);
@@ -62,6 +70,14 @@ function DisclosuresContent() {
   useEffect(() => {
     fetchDisclosures();
   }, [fetchDisclosures]);
+
+  // AI 분석 완료 감지
+  useEffect(() => {
+    if (prevPendingRef.current > 0 && pendingAnalysis === 0) {
+      toast.success("AI 분석 완료");
+    }
+    prevPendingRef.current = pendingAnalysis;
+  }, [pendingAnalysis]);
 
   // 미분석 건이 있으면 5초 간격으로 자동 폴링
   useEffect(() => {
@@ -97,7 +113,7 @@ function DisclosuresContent() {
               >
                 &larr; 전체 공시
               </Link>
-              <h1 className="text-xl font-bold tracking-tight mt-1">
+              <h1 className="text-2xl font-bold tracking-tight mt-1">
                 {corpName ?? corpCode} 공시
               </h1>
               <p className="text-[12px] text-muted-foreground mt-0.5">
@@ -106,7 +122,7 @@ function DisclosuresContent() {
             </>
           ) : (
             <>
-              <h1 className="text-xl font-bold tracking-tight">공시</h1>
+              <h1 className="text-2xl font-bold tracking-tight">공시</h1>
               <p className="text-[12px] text-muted-foreground mt-0.5">
                 관심종목의 AI 분석 공시
               </p>
@@ -132,18 +148,18 @@ function DisclosuresContent() {
       </div>
 
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[12px] text-red-700">
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[12px] text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
           {error}
         </div>
       )}
 
-      <div className="space-y-2.5">
+      <div className="space-y-3">
         {loading ? (
           Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-28 rounded-xl" />
+            <Skeleton key={i} className="h-28 rounded-2xl" />
           ))
         ) : filtered.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border py-16 text-center">
+          <div className="glass-card rounded-2xl border-dashed py-16 text-center">
             <p className="text-sm text-muted-foreground">
               {corpCode ? "해당 종목의 공시가 없습니다" : "공시가 없습니다"}
             </p>
@@ -152,6 +168,11 @@ function DisclosuresContent() {
                 ? "기간이나 필터를 조정해 보세요"
                 : "관심종목을 추가하거나 필터를 조정하세요"}
             </p>
+            {!corpCode && (
+              <Link href="/watchlist" className="mt-3 inline-block">
+                <Button variant="outline" size="sm">관심종목 추가하기</Button>
+              </Link>
+            )}
           </div>
         ) : (
           filtered.map((d) => (
@@ -178,9 +199,9 @@ export default function DisclosuresPage() {
             <div className="h-7 w-20 bg-muted rounded animate-pulse" />
             <div className="h-4 w-40 bg-muted rounded animate-pulse mt-1" />
           </div>
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-28 rounded-xl" />
+              <Skeleton key={i} className="h-28 rounded-2xl" />
             ))}
           </div>
         </div>

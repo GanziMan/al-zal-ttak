@@ -1,15 +1,15 @@
 export const categoryColor: Record<string, string> = {
-  호재: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  악재: "bg-red-50 text-red-700 border-red-200",
-  중립: "bg-amber-50 text-amber-700 border-amber-200",
-  단순정보: "bg-zinc-100 text-zinc-600 border-zinc-200",
+  호재: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-400 dark:border-emerald-800",
+  악재: "bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-400 dark:border-red-800",
+  중립: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-400 dark:border-amber-800",
+  단순정보: "bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700",
 };
 
 export const categoryBorder: Record<string, string> = {
   호재: "border-l-emerald-500",
   악재: "border-l-red-500",
   중립: "border-l-amber-500",
-  단순정보: "border-l-zinc-300",
+  단순정보: "border-l-zinc-300 dark:border-l-zinc-600",
 };
 
 export const categoryDot: Record<string, string> = {
@@ -30,8 +30,8 @@ export function formatDateShort(dateStr: string) {
 }
 
 export function scoreColor(score: number) {
-  if (score >= 80) return "text-red-600";
-  if (score >= 50) return "text-amber-600";
-  if (score >= 20) return "text-blue-600";
-  return "text-zinc-400";
+  if (score >= 80) return "text-red-600 dark:text-red-400";
+  if (score >= 50) return "text-amber-600 dark:text-amber-400";
+  if (score >= 20) return "text-blue-600 dark:text-blue-400";
+  return "text-zinc-400 dark:text-zinc-500";
 }
