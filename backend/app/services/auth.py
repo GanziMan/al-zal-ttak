@@ -38,6 +38,11 @@ async def exchange_kakao_code(code: str) -> dict:
 
     async with httpx.AsyncClient() as client:
         resp = await client.post(KAKAO_TOKEN_URL, data=data)
+        if resp.status_code != 200:
+            import logging
+            logging.getLogger(__name__).error(
+                "Kakao token error: %s %s", resp.status_code, resp.text
+            )
         resp.raise_for_status()
         return resp.json()
 
