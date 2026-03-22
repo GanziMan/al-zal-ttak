@@ -72,9 +72,9 @@ export function FinancialChart({ data }: FinancialChartProps) {
                 formatter={(value) => formatBillion(Number(value ?? 0))}
               />
               <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Bar dataKey="매출액" fill="hsl(var(--primary))" opacity={0.7} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="영업이익" fill="hsl(142 76% 46%)" opacity={0.7} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="당기순이익" fill="hsl(45 93% 47%)" opacity={0.7} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="매출액" fill="#818cf8" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="영업이익" fill="#6366f1" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="당기순이익" fill="#4338ca" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         )}

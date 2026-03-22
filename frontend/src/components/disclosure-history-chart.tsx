@@ -90,8 +90,8 @@ export function DisclosureHistoryChart() {
                 }}
                 labelFormatter={(label) => `날짜: ${label}`}
               />
-              <Bar yAxisId="left" dataKey="count" name="공시 수" fill="hsl(var(--primary))" opacity={0.3} radius={[4, 4, 0, 0]} />
-              <Line yAxisId="right" type="monotone" dataKey="avg_score" name="평균 점수" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+              <Bar yAxisId="left" dataKey="count" name="공시 수" fill="#a5b4fc" radius={[4, 4, 0, 0]} />
+              <Line yAxisId="right" type="monotone" dataKey="avg_score" name="평균 점수" stroke="#6366f1" strokeWidth={2} dot={false} />
             </ComposedChart>
           </ResponsiveContainer>
         )}

@@ -1,6 +1,7 @@
 """재무제표, 배당, 대주주 데이터 서비스 (DART API + DB 캐시)"""
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import datetime, timedelta
 
@@ -108,49 +109,43 @@ def _parse_amount(val: str) -> int:
 
 
 async def get_financial_summary(dart_client: DartClient, corp_code: str, years: int = 5) -> list[dict]:
-    """최근 N년 재무제표 요약"""
+    """최근 N년 재무제표 요약 (병렬 조회)"""
     current_year = datetime.now().year
-    results = []
+    year_list = [str(y) for y in range(current_year - years, current_year)]
 
-    for year in range(current_year - years, current_year):
-        bsns_year = str(year)
+    async def _fetch_one(bsns_year: str) -> dict:
         cached = await _get_cached(corp_code, "financial", bsns_year, "11011")
         if cached:
-            results.append({"year": bsns_year, "accounts": cached})
-            continue
-
+            return {"year": bsns_year, "accounts": cached}
         try:
             raw = await dart_client.get_financial_statements(corp_code, bsns_year)
             parsed = _parse_financial_statements(raw)
             await _save_cache(corp_code, "financial", bsns_year, "11011", parsed)
-            results.append({"year": bsns_year, "accounts": parsed})
+            return {"year": bsns_year, "accounts": parsed}
         except Exception:
             logger.warning("Failed to fetch financials for %s/%s", corp_code, bsns_year)
-            results.append({"year": bsns_year, "accounts": []})
+            return {"year": bsns_year, "accounts": []}
 
-    return results
+    return await asyncio.gather(*[_fetch_one(y) for y in year_list])
 
 
 async def get_dividend_history(dart_client: DartClient, corp_code: str, years: int = 5) -> list[dict]:
-    """최근 N년 배당 이력"""
+    """최근 N년 배당 이력 (병렬 조회)"""
     current_year = datetime.now().year
-    results = []
+    year_list = [str(y) for y in range(current_year - years, current_year)]
 
-    for year in range(current_year - years, current_year):
-        bsns_year = str(year)
+    async def _fetch_one(bsns_year: str) -> dict:
         cached = await _get_cached(corp_code, "dividend", bsns_year, "11011")
         if cached:
-            results.append({"year": bsns_year, "dividends": cached})
-            continue
-
+            return {"year": bsns_year, "dividends": cached}
         try:
             raw = await dart_client.get_dividends(corp_code, bsns_year)
             parsed = _parse_dividends(raw)
             await _save_cache(corp_code, "dividend", bsns_year, "11011", parsed)
-            results.append({"year": bsns_year, "dividends": parsed})
+            return {"year": bsns_year, "dividends": parsed}
         except Exception:
             logger.warning("Failed to fetch dividends for %s/%s", corp_code, bsns_year)
-            results.append({"year": bsns_year, "dividends": []})
+            return {"year": bsns_year, "dividends": []}
 
     return results
 

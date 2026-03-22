@@ -1,6 +1,7 @@
 """기업 재무 데이터 API"""
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from fastapi import APIRouter, Query, Depends
@@ -55,14 +56,18 @@ async def get_company_summary(
 ):
     dart_client = DartClient(api_key=settings.dart_api_key)
 
-    try:
-        company_info = await dart_client.get_company_info(corp_code)
-    except Exception:
-        company_info = {}
+    async def _company():
+        try:
+            return await dart_client.get_company_info(corp_code)
+        except Exception:
+            return {}
 
-    financials = await get_financial_summary(dart_client, corp_code, years=5)
-    dividends = await get_dividend_history(dart_client, corp_code, years=5)
-    shareholders = await get_shareholders(dart_client, corp_code)
+    company_info, financials, dividends, shareholders = await asyncio.gather(
+        _company(),
+        get_financial_summary(dart_client, corp_code, years=5),
+        get_dividend_history(dart_client, corp_code, years=5),
+        get_shareholders(dart_client, corp_code),
+    )
 
     return {
         "company": {
