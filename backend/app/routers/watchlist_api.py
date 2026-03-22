@@ -1,4 +1,6 @@
 """관심종목 API"""
+import time
+import logging
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
@@ -6,6 +8,7 @@ from app.dependencies import get_current_user
 from app.models.user import User
 from app.services.watchlist import load_watchlist, add_stock, remove_stock
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -17,7 +20,10 @@ class AddStockRequest(BaseModel):
 
 @router.get("")
 async def get_watchlist(user: User = Depends(get_current_user)):
-    return {"watchlist": await load_watchlist(user.id)}
+    t0 = time.time()
+    result = await load_watchlist(user.id)
+    logger.info("load_watchlist took %.0fms", (time.time() - t0) * 1000)
+    return {"watchlist": result}
 
 
 @router.post("")
