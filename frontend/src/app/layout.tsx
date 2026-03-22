@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { Nav } from "@/components/nav";
 import { AuthProvider } from "@/components/auth-provider";
+import { SwRegister } from "@/components/sw-register";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -62,6 +63,14 @@ export const metadata: Metadata = {
   alternates: {
     canonical: SITE_URL,
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: SITE_NAME,
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 export const viewport: Viewport = {
@@ -70,6 +79,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
+  themeColor: "#6366f1",
 };
 
 export default function RootLayout({
@@ -116,6 +126,7 @@ export default function RootLayout({
           id="theme-init"
           strategy="beforeInteractive"
         >{`(function(){try{var d=document.documentElement;var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){d.classList.add('dark')}}catch(e){}})()`}</Script>
+        <SwRegister />
         <AuthProvider>
           <Nav />
           <Toaster position="bottom-right" />
