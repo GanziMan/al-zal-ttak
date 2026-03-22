@@ -13,10 +13,9 @@ interface DisclosureCardProps {
   onToggleBookmark?: (d: Disclosure) => void;
 }
 
-function openDart(rceptNo: string) {
-  const url = `https://dart.fss.or.kr/dsaf001/main.do?rcept_no=${rceptNo}`;
-  const w = window.open("about:blank", "_blank");
-  if (w) w.location.href = url;
+function openDisclosure(corpName: string, reportNm: string) {
+  const query = encodeURIComponent(`${corpName} ${reportNm} DART 공시`);
+  window.open(`https://search.naver.com/search.naver?query=${query}`, "_blank");
 }
 
 export function DisclosureCard({ disclosure, isBookmarked, onToggleBookmark }: DisclosureCardProps) {
@@ -60,7 +59,7 @@ export function DisclosureCard({ disclosure, isBookmarked, onToggleBookmark }: D
               <button
                 type="button"
                 className="group/link inline-flex items-center gap-1 hover:text-primary transition-colors text-left"
-                onClick={(e) => { e.stopPropagation(); openDart(disclosure.rcept_no); }}
+                onClick={(e) => { e.stopPropagation(); openDisclosure(disclosure.corp_name, disclosure.report_nm); }}
               >
                 {disclosure.report_nm}
                 <ExternalLink className="h-3 w-3 opacity-0 group-hover/link:opacity-60 transition-opacity shrink-0" />
@@ -149,7 +148,7 @@ export function DisclosureCard({ disclosure, isBookmarked, onToggleBookmark }: D
                             </div>
                             <button
                               type="button"
-                              onClick={() => openDart(s.rcept_no)}
+                              onClick={() => openDisclosure(s.corp_name, s.report_nm)}
                               className="text-[11px] text-foreground/70 hover:text-primary transition-colors line-clamp-1 text-left"
                             >
                               {s.report_nm}

@@ -217,6 +217,13 @@ function DisclosuresContent() {
               isBookmarked={bookmarks.some((b) => b.rcept_no === d.rcept_no)}
               onToggleBookmark={async (disc) => {
                 const exists = bookmarks.some((b) => b.rcept_no === disc.rcept_no);
+                const prev = bookmarks;
+                // Optimistic update
+                if (exists) {
+                  setBookmarks(bookmarks.filter((b) => b.rcept_no !== disc.rcept_no));
+                } else {
+                  setBookmarks([...bookmarks, { rcept_no: disc.rcept_no, corp_name: disc.corp_name, report_nm: disc.report_nm, memo: "", created_at: "" }]);
+                }
                 try {
                   const res = exists
                     ? await api.removeBookmark(disc.rcept_no)
@@ -226,7 +233,10 @@ function DisclosuresContent() {
                         report_nm: disc.report_nm,
                       });
                   setBookmarks(res.bookmarks);
-                } catch {}
+                } catch {
+                  setBookmarks(prev); // rollback
+                  toast.error(exists ? "북마크 해제 실패" : "북마크 추가 실패");
+                }
               }}
             />
           ))

@@ -18,11 +18,20 @@ export function BookmarksSection() {
       .finally(() => setLoading(false));
   }, []);
 
+  function openDisclosure(corpName: string, reportNm: string) {
+    const query = encodeURIComponent(`${corpName} ${reportNm} DART 공시`);
+    window.open(`https://search.naver.com/search.naver?query=${query}`, "_blank");
+  }
+
   async function handleRemove(rceptNo: string) {
+    const prev = bookmarks;
+    setBookmarks(bookmarks.filter((b) => b.rcept_no !== rceptNo));
     try {
       const res = await api.removeBookmark(rceptNo);
       setBookmarks(res.bookmarks);
-    } catch {}
+    } catch {
+      setBookmarks(prev);
+    }
   }
 
   return (
@@ -53,15 +62,14 @@ export function BookmarksSection() {
                   <span className="text-[10px] font-semibold text-foreground block">
                     {b.corp_name}
                   </span>
-                  <a
-                    href={`https://dart.fss.or.kr/dsaf001/main.do?rcept_no=${b.rcept_no}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[11px] text-foreground/70 hover:text-primary transition-colors line-clamp-1 inline-flex items-center gap-1"
+                  <button
+                    type="button"
+                    onClick={() => openDisclosure(b.corp_name, b.report_nm)}
+                    className="text-[11px] text-foreground/70 hover:text-primary transition-colors line-clamp-1 inline-flex items-center gap-1 text-left"
                   >
                     {b.report_nm}
                     <ExternalLink className="h-2.5 w-2.5 shrink-0 opacity-50" />
-                  </a>
+                  </button>
                   {b.memo && (
                     <p className="text-[10px] text-muted-foreground/60 mt-0.5 line-clamp-1">
                       {b.memo}
