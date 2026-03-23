@@ -4,11 +4,9 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from fastapi import APIRouter, Query, Depends
+from fastapi import APIRouter, Query
 
 from app.config import settings
-from app.dependencies import get_current_user
-from app.models.user import User
 from app.services.dart_client import DartClient
 from app.services.financial_data import get_all_company_data, get_financial_summary, get_dividend_history, get_shareholders
 
@@ -21,7 +19,6 @@ router = APIRouter()
 async def get_financials(
     corp_code: str,
     years: int = Query(5, ge=1, le=10),
-    user: User = Depends(get_current_user),
 ):
     dart_client = DartClient(api_key=settings.dart_api_key)
     data = await get_financial_summary(dart_client, corp_code, years)
@@ -32,7 +29,6 @@ async def get_financials(
 async def get_dividends(
     corp_code: str,
     years: int = Query(5, ge=1, le=10),
-    user: User = Depends(get_current_user),
 ):
     dart_client = DartClient(api_key=settings.dart_api_key)
     data = await get_dividend_history(dart_client, corp_code, years)
@@ -42,7 +38,6 @@ async def get_dividends(
 @router.get("/{corp_code}/shareholders")
 async def get_shareholders_api(
     corp_code: str,
-    user: User = Depends(get_current_user),
 ):
     dart_client = DartClient(api_key=settings.dart_api_key)
     data = await get_shareholders(dart_client, corp_code)
@@ -52,7 +47,6 @@ async def get_shareholders_api(
 @router.get("/{corp_code}/summary")
 async def get_company_summary(
     corp_code: str,
-    user: User = Depends(get_current_user),
 ):
     dart_client = DartClient(api_key=settings.dart_api_key)
 
