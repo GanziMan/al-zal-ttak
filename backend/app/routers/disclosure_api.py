@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Query, Depends
 
@@ -12,6 +13,7 @@ from app.models.user import User
 from app.services.dart_client import DartClient
 from app.services.disclosure_filter import get_watchlist_disclosures
 from app.services.analysis_cache import get_cached_analysis, get_cached_full, save_analysis, search_similar
+from app.services.dart_cache import get_cached_disclosures, set_cached_disclosures
 from app.services.settings import load_settings
 from app.services.telegram import send_alert, format_disclosure_alert
 from app.agents.runner import analyze_disclosure
@@ -144,6 +146,33 @@ async def _analyze_batch(disclosures: list[dict], user_id: int) -> None:
         logger.exception("Background analysis failed")
 
 
+async def _analyze_batch_public(disclosures: list[dict]) -> None:
+    """백그라운드에서 미분석 공시를 배치 처리 (public, 텔레그램 없음)."""
+    to_analyze = [d for d in disclosures if d.get("rcept_no", "") not in _analyzing_rcept_nos]
+    if not to_analyze:
+        return
+
+    rcept_nos = {d.get("rcept_no", "") for d in to_analyze}
+    _analyzing_rcept_nos.update(rcept_nos)
+    logger.info("Public background analysis started for %d disclosures", len(to_analyze))
+
+    sem = asyncio.Semaphore(CONCURRENT_ANALYSIS_LIMIT)
+
+    async def _limited(d: dict) -> None:
+        rcept_no = d.get("rcept_no", "")
+        try:
+            async with sem:
+                await _enrich_one(d)
+        finally:
+            _analyzing_rcept_nos.discard(rcept_no)
+
+    try:
+        await asyncio.gather(*[_limited(d) for d in to_analyze])
+        logger.info("Public background analysis completed")
+    except Exception:
+        logger.exception("Public background analysis failed")
+
+
 @router.get("/count")
 async def get_disclosure_count(since: str = Query(None), user: User = Depends(get_current_user)):
     dart_client = DartClient(api_key=settings.dart_api_key)
@@ -151,6 +180,58 @@ async def get_disclosure_count(since: str = Query(None), user: User = Depends(ge
     if since:
         disclosures = [d for d in disclosures if d.get("rcept_dt", "") >= since]
     return {"count": len(disclosures)}
+
+
+@router.get("/public")
+async def get_public_disclosures(
+    days: int = Query(7, ge=1, le=30),
+    category: str = Query(None, description="호재/악재/중립/단순정보"),
+    min_score: int = Query(0, ge=0, le=100),
+):
+    dart_client = DartClient(api_key=settings.dart_api_key)
+    today = datetime.now().strftime("%Y%m%d")
+    start = (datetime.now() - timedelta(days=days)).strftime("%Y%m%d")
+    cache_key = f"public_{start}_{today}"
+
+    # 캐시 확인
+    cached_list = await get_cached_disclosures(cache_key)
+    if cached_list is None:
+        cached_list = await dart_client.get_all_disclosures(bgn_de=start, end_de=today)
+        await set_cached_disclosures(cache_key, cached_list)
+
+    disclosures = list(cached_list)
+
+    # 분석 캐시 병렬 조회
+    async def _get_analysis(rcept_no: str):
+        if not rcept_no:
+            return None
+        return await get_cached_analysis(rcept_no)
+
+    cached_results = await asyncio.gather(*[_get_analysis(d.get("rcept_no", "")) for d in disclosures])
+
+    pending = []
+    for d, cached in zip(disclosures, cached_results):
+        d["analysis"] = cached
+        if cached is None:
+            pending.append(d)
+
+    if pending:
+        task = asyncio.create_task(_analyze_batch_public(pending))
+        _background_tasks.add(task)
+        task.add_done_callback(_background_tasks.discard)
+
+    results = list(disclosures)
+
+    if category:
+        results = [d for d in results if d.get("analysis") and d["analysis"].get("category") == category]
+    if min_score > 0:
+        results = [d for d in results if d.get("analysis") and d["analysis"].get("importance_score", 0) >= min_score]
+
+    return {
+        "disclosures": results,
+        "total": len(results),
+        "pending_analysis": len(pending),
+    }
 
 
 @router.get("/{rcept_no}/similar")
