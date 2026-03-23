@@ -17,10 +17,12 @@ import {
 import { FinancialChart } from "@/components/financial-chart";
 import { DividendTable } from "@/components/dividend-table";
 import { ShareholderTable } from "@/components/shareholder-table";
+import { useAuth } from "@/components/auth-provider";
 
 export default function CompanyDetailPage() {
   const params = useParams();
   const corpCode = params.corp_code as string;
+  const { isLoggedIn } = useAuth();
 
   const [company, setCompany] = useState<CompanyInfo | null>(null);
   const [financials, setFinancials] = useState<FinancialYear[] | null>(null);
@@ -74,8 +76,10 @@ export default function CompanyDetailPage() {
     return (
       <div className="glass-card rounded-2xl p-8 text-center">
         <p className="text-sm text-muted-foreground">기업 정보를 불러올 수 없습니다.</p>
-        <Link href="/watchlist" className="mt-3 inline-block">
-          <Button variant="outline" size="sm">관심종목으로 돌아가기</Button>
+        <Link href={isLoggedIn ? "/watchlist" : "/"} className="mt-3 inline-block">
+          <Button variant="outline" size="sm">
+            {isLoggedIn ? "관심종목으로 돌아가기" : "홈으로 돌아가기"}
+          </Button>
         </Link>
       </div>
     );
