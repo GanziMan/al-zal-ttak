@@ -1,16 +1,16 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   BarChart3,
-  Bell,
   BrainCircuit,
-  FileSearch,
   Shield,
   Star,
-  TrendingUp,
-  Zap,
 } from "lucide-react";
+import { api, DashboardSummary, Disclosure } from "@/lib/api";
+import { DisclosureCard } from "@/components/disclosure-card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -23,25 +23,11 @@ const features = [
     bg: "bg-violet-500/10",
   },
   {
-    icon: TrendingUp,
-    title: "호재/악재 판별",
-    desc: "공시의 시장 영향을 호재, 악재, 중립으로 분류합니다",
-    color: "text-emerald-500",
-    bg: "bg-emerald-500/10",
-  },
-  {
     icon: Star,
-    title: "관심종목 관리",
-    desc: "내가 관심 있는 종목만 추적하고 알림을 받을 수 있습니다",
+    title: "관심종목 + 알림",
+    desc: "관심 종목을 추적하고 텔레그램으로 중요 공시 알림을 받습니다",
     color: "text-amber-500",
     bg: "bg-amber-500/10",
-  },
-  {
-    icon: Bell,
-    title: "텔레그램 알림",
-    desc: "중요한 공시가 뜨면 텔레그램으로 즉시 알림을 보내줍니다",
-    color: "text-blue-500",
-    bg: "bg-blue-500/10",
   },
   {
     icon: BarChart3,
@@ -50,22 +36,31 @@ const features = [
     color: "text-rose-500",
     bg: "bg-rose-500/10",
   },
-  {
-    icon: FileSearch,
-    title: "유사 공시 탐색",
-    desc: "과거 유사한 공시를 찾아 비교 분석할 수 있습니다",
-    color: "text-cyan-500",
-    bg: "bg-cyan-500/10",
-  },
-];
-
-const steps = [
-  { num: "1", title: "카카오 로그인", desc: "간편하게 로그인하세요" },
-  { num: "2", title: "관심종목 추가", desc: "추적할 종목을 선택하세요" },
-  { num: "3", title: "AI가 분석", desc: "공시를 자동으로 분석합니다" },
 ];
 
 export function Landing() {
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [disclosures, setDisclosures] = useState<Disclosure[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const [dashData, discData] = await Promise.all([
+          api.getPublicDashboard(),
+          api.getPublicDisclosures({ days: 7 }),
+        ]);
+        setSummary(dashData);
+        setDisclosures(discData.disclosures.slice(0, 10));
+      } catch {
+        // silent
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
   return (
     <div className="space-y-20 pb-12">
       {/* Hero */}
@@ -108,81 +103,50 @@ export function Landing() {
             </a>
           </div>
         </div>
+      </section>
 
-        {/* Mock dashboard preview */}
-        <div className="relative mt-16 w-full max-w-3xl">
-          <div className="glass-card rounded-3xl p-6 sm:p-8">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {[
-                { label: "관심종목", value: "12", sub: "종목" },
-                { label: "오늘 공시", value: "47", sub: "건" },
-                { label: "호재", value: "8", sub: "+17%" },
-                { label: "악재", value: "3", sub: "-6%" },
-              ].map((card) => (
-                <div
-                  key={card.label}
-                  className="glass-surface rounded-2xl p-4 text-center"
-                >
-                  <p className="text-[10px] font-medium text-muted-foreground">
-                    {card.label}
-                  </p>
-                  <p className="text-2xl font-black text-foreground mt-1">
-                    {card.value}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-                    {card.sub}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            {/* Fake chart bars */}
-            <div className="mt-6 flex items-end justify-between gap-1.5 h-20 px-2">
-              {[35, 55, 40, 70, 50, 85, 65, 90, 45, 75, 60, 80].map((h, i) => (
-                <div
-                  key={i}
-                  className="flex-1 rounded-t-md bg-primary/20 transition-all"
-                  style={{ height: `${h}%` }}
-                />
-              ))}
-            </div>
-            <div className="flex justify-between mt-2 px-2">
-              <span className="text-[9px] text-muted-foreground/40">3/10</span>
-              <span className="text-[9px] text-muted-foreground/40">3/22</span>
-            </div>
-          </div>
-
-          {/* Floating cards */}
-          <div className="absolute -top-4 -right-2 sm:-right-6 glass-card rounded-2xl p-3 shadow-lg animate-float-slow">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                <TrendingUp className="h-4 w-4 text-emerald-500" />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-foreground">
-                  삼성전자
-                </p>
-                <p className="text-[9px] text-emerald-500 font-semibold">
-                  호재 92점
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="absolute -bottom-3 -left-2 sm:-left-6 glass-card rounded-2xl p-3 shadow-lg animate-float-delayed">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-xl bg-violet-500/10 flex items-center justify-center">
-                <BrainCircuit className="h-4 w-4 text-violet-500" />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-foreground">
-                  AI 분석 완료
-                </p>
-                <p className="text-[9px] text-muted-foreground">12건 처리됨</p>
-              </div>
-            </div>
-          </div>
+      {/* 실시간 요약 */}
+      <section className="grid grid-cols-3 gap-3">
+        <div className="glass-card rounded-2xl p-4 text-center">
+          <p className="text-[10px] font-medium text-muted-foreground">오늘 공시</p>
+          <p className="text-2xl font-black text-foreground mt-1">{summary?.today_disclosures ?? "-"}</p>
+          <p className="text-[10px] text-muted-foreground/60 mt-0.5">건</p>
         </div>
+        <div className="glass-card rounded-2xl p-4 text-center">
+          <p className="text-[10px] font-medium text-muted-foreground">호재</p>
+          <p className="text-2xl font-black text-emerald-500 mt-1">{summary?.bullish ?? "-"}</p>
+          <p className="text-[10px] text-muted-foreground/60 mt-0.5">건</p>
+        </div>
+        <div className="glass-card rounded-2xl p-4 text-center">
+          <p className="text-[10px] font-medium text-muted-foreground">악재</p>
+          <p className="text-2xl font-black text-red-500 mt-1">{summary?.bearish ?? "-"}</p>
+          <p className="text-[10px] text-muted-foreground/60 mt-0.5">건</p>
+        </div>
+      </section>
+
+      {/* 최신 AI 분석 공시 */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold">최신 AI 분석 공시</h2>
+          <Link href="/disclosures" className="text-xs text-primary hover:underline">
+            전체보기 →
+          </Link>
+        </div>
+        {loading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-32 rounded-2xl" />
+            ))}
+          </div>
+        ) : disclosures.length > 0 ? (
+          <div className="space-y-3">
+            {disclosures.map((d) => (
+              <DisclosureCard key={d.rcept_no} disclosure={d} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground text-center py-8">공시 데이터를 불러오는 중입니다...</p>
+        )}
       </section>
 
       {/* Features */}
@@ -216,41 +180,6 @@ export function Landing() {
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="space-y-10">
-        <div className="text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
-            시작하는 법
-          </h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            3단계로 간편하게 시작하세요
-          </p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center gap-6 justify-center">
-          {steps.map((s, i) => (
-            <div key={s.num} className="flex items-center gap-4">
-              <div className="glass-card rounded-2xl p-6 text-center w-52">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 mb-3">
-                  <span className="text-lg font-black text-primary">
-                    {s.num}
-                  </span>
-                </div>
-                <h3 className="text-sm font-bold text-foreground">{s.title}</h3>
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  {s.desc}
-                </p>
-              </div>
-              {i < steps.length - 1 && (
-                <div className="hidden sm:block text-muted-foreground/30 text-2xl font-light">
-                  &rarr;
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* CTA */}
       <section className="text-center">
         <div className="glass-card rounded-3xl p-10 sm:p-14 relative overflow-hidden">
@@ -261,7 +190,7 @@ export function Landing() {
               지금 바로 시작하세요
             </h2>
             <p className="mt-3 text-sm text-muted-foreground max-w-sm mx-auto">
-              카카오 로그인 한 번이면 모든 기능을 무료로 사용할 수 있습니다
+              로그인하면 관심종목 저장, 텔레그램 알림 등 더 많은 기능을 사용할 수 있습니다
             </p>
             <a
               href={`${API_BASE}/api/auth/kakao/login`}
