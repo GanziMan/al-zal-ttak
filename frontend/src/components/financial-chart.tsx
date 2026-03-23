@@ -84,7 +84,7 @@ export function FinancialChart({ data }: FinancialChartProps) {
                 width={50}
                 tickFormatter={formatBillion}
               />
-              <Tooltip content={<CustomTooltip />} cursor={false} />
+              <Tooltip content={<CustomTooltip />} cursor={false} isAnimationActive={false} />
               <Legend wrapperStyle={{ fontSize: 11 }} />
               <Bar dataKey="매출액" fill="#94A3B8" radius={[4, 4, 0, 0]} />
               <Bar dataKey="영업이익" fill="#F59E0B" radius={[4, 4, 0, 0]} />

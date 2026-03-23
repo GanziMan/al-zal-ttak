@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { api, AppSettings } from "@/lib/api";
+import { api, getCached, setCache, AppSettings } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/auth-provider";
 
@@ -23,8 +23,8 @@ const ALL_CATEGORIES = ["호재", "악재", "중립", "단순정보"];
 
 export default function SettingsPage() {
   const { user, isLoggedIn, logout } = useAuth();
-  const [settings, setSettings] = useState<AppSettings | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [settings, setSettings] = useState<AppSettings | null>(() => getCached<AppSettings>("/api/settings"));
+  const [loading, setLoading] = useState(() => !getCached("/api/settings"));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [keywordInput, setKeywordInput] = useState("");
@@ -34,6 +34,7 @@ export default function SettingsPage() {
       try {
         const data = await api.getSettings();
         setSettings(data);
+        setCache("/api/settings", data);
       } catch {
         setError("설정을 불러올 수 없습니다. 백엔드 서버를 확인하세요.");
       } finally {

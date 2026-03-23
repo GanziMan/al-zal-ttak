@@ -11,7 +11,7 @@ interface CacheEntry<T> {
   ts: number;
 }
 
-function getCached<T>(key: string): T | null {
+export function getCached<T>(key: string): T | null {
   try {
     const raw = localStorage.getItem(CACHE_PREFIX + key);
     if (!raw) return null;
@@ -23,7 +23,7 @@ function getCached<T>(key: string): T | null {
   }
 }
 
-function setCache<T>(key: string, data: T) {
+export function setCache<T>(key: string, data: T) {
   try {
     const entry: CacheEntry<T> = { data, ts: Date.now() };
     localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(entry));

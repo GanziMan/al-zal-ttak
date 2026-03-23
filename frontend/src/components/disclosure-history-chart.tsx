@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { BarChart3 } from "lucide-react";
-import { api, fetchWithRevalidate, HistoryDataPoint } from "@/lib/api";
+import { api, fetchWithRevalidate, getCached, HistoryDataPoint } from "@/lib/api";
 import { formatDateShort } from "@/lib/disclosure-utils";
 import { cn } from "@/lib/utils";
 
@@ -44,9 +44,12 @@ const PERIOD_OPTIONS = [
 ];
 
 export function DisclosureHistoryChart() {
-  const [data, setData] = useState<HistoryDataPoint[]>([]);
-  const [loading, setLoading] = useState(true);
   const [days, setDays] = useState(14);
+  const [data, setData] = useState<HistoryDataPoint[]>(() => {
+    const cached = getCached<{ history: HistoryDataPoint[] }>(`history_14`);
+    return cached?.history ?? [];
+  });
+  const [loading, setLoading] = useState(() => !getCached("history_14"));
 
   useEffect(() => {
     setLoading(true);
@@ -97,7 +100,7 @@ export function DisclosureHistoryChart() {
               <XAxis dataKey="dateLabel" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
               <YAxis yAxisId="left" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} width={30} />
               <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} width={30} />
-              <Tooltip content={<CustomTooltip />} cursor={false} />
+              <Tooltip content={<CustomTooltip />} cursor={false} isAnimationActive={false} />
               <Bar yAxisId="left" dataKey="count" name="공시 수" fill="#94A3B8" radius={[4, 4, 0, 0]} />
               <Line yAxisId="right" type="monotone" dataKey="avg_score" name="평균 점수" stroke="#F59E0B" strokeWidth={2} dot={false} />
             </ComposedChart>

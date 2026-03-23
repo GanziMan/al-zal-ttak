@@ -8,7 +8,7 @@ import { DisclosureFilters } from "@/components/disclosure-filters";
 import { DisclosureCard } from "@/components/disclosure-card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { api, fetchWithRevalidate, Bookmark, Disclosure } from "@/lib/api";
+import { api, fetchWithRevalidate, getCached, Bookmark, Disclosure } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
 
 interface DisclosuresClientProps {
@@ -21,8 +21,15 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
   const corpCode = searchParams.get("corp_code");
   const { isLoggedIn } = useAuth();
 
-  const [disclosures, setDisclosures] = useState<Disclosure[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [disclosures, setDisclosures] = useState<Disclosure[]>(() => {
+    if (initialDisclosures.length > 0) return initialDisclosures;
+    const cached = getCached<{ disclosures: Disclosure[] }>("disclosures_7_all_0");
+    return cached?.disclosures ?? [];
+  });
+  const [loading, setLoading] = useState(() => {
+    if (initialDisclosures.length > 0) return false;
+    return !getCached("disclosures_7_all_0");
+  });
   const [error, setError] = useState("");
   const [category, setCategory] = useState(searchParams.get("category") || "all");
   const [days, setDays] = useState(Number(searchParams.get("days")) || 7);

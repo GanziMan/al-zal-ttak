@@ -4,18 +4,22 @@ import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { StockSearch } from "@/components/stock-search";
 import { WatchlistTable } from "@/components/watchlist-table";
-import { api, Corp, WatchlistItem } from "@/lib/api";
+import { api, getCached, setCache, Corp, WatchlistItem } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function WatchlistPage() {
-  const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [watchlist, setWatchlist] = useState<WatchlistItem[]>(() => {
+    const cached = getCached<{ watchlist: WatchlistItem[] }>("/api/watchlist");
+    return cached?.watchlist ?? [];
+  });
+  const [loading, setLoading] = useState(() => !getCached("/api/watchlist"));
   const [error, setError] = useState("");
 
   const fetchWatchlist = useCallback(async () => {
     try {
       const data = await api.getWatchlist();
       setWatchlist(data.watchlist);
+      setCache("/api/watchlist", data);
       setError("");
     } catch {
       setError("관심종목을 불러올 수 없습니다. 백엔드 서버를 확인하세요.");

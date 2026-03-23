@@ -10,12 +10,12 @@ import { DisclosureHistoryChart } from "@/components/disclosure-history-chart";
 import { BookmarksSection } from "@/components/bookmarks-section";
 import { Landing } from "@/components/landing";
 import { Skeleton } from "@/components/ui/skeleton";
-import { api, fetchWithRevalidate, DashboardSummary, Disclosure } from "@/lib/api";
+import { api, fetchWithRevalidate, getCached, DashboardSummary, Disclosure } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
 
 function Dashboard() {
-  const [data, setData] = useState<DashboardSummary | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<DashboardSummary | null>(() => getCached<DashboardSummary>("/api/dashboard/summary"));
+  const [loading, setLoading] = useState(() => !getCached("/api/dashboard/summary"));
   const [error, setError] = useState("");
 
   useEffect(() => {
