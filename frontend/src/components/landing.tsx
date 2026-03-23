@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
+  ArrowRight,
   BarChart3,
   BrainCircuit,
   Shield,
@@ -71,7 +72,7 @@ export function Landing({ summary: initialSummary, disclosures: initialDisclosur
   return (
     <div className="space-y-20 pb-12">
       {/* Hero */}
-      <section className="relative flex flex-col items-center text-center pt-12 sm:pt-20">
+      <section className="relative flex flex-col items-center text-center pt-12 sm:pt-20 overflow-hidden">
         {/* Glow */}
         <div className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full bg-primary/8 blur-[100px]" />
 
@@ -92,22 +93,14 @@ export function Landing({ summary: initialSummary, disclosures: initialDisclosur
             호재/악재를 판별해 알려드립니다
           </p>
 
-          <div className="mt-10 flex flex-col sm:flex-row items-center gap-3">
-            <a
-              href={`${API_BASE}/api/auth/kakao/login`}
-              className="mx-auto inline-flex items-center justify-center gap-2.5 rounded-2xl px-8 py-3.5 text-sm font-bold transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-yellow-500/20"
-              style={{ backgroundColor: "#FEE500", color: "#000000" }}
+          <div className="mt-10">
+            <Link
+              href="/disclosures"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-8 py-3.5 text-sm font-bold text-primary-foreground transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/20"
             >
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M9 0.5C4.029 0.5 0 3.588 0 7.393c0 2.388 1.558 4.495 3.932 5.734l-1.01 3.693c-.088.322.28.577.556.388L7.555 14.58c.474.056.958.087 1.445.087 4.971 0 9-3.088 9-6.893S13.971 0.5 9 0.5"
-                  fill="#000000"
-                />
-              </svg>
-              카카오로 시작하기
-            </a>
+              공시 보러가기
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
         </div>
       </section>
@@ -194,25 +187,16 @@ export function Landing({ summary: initialSummary, disclosures: initialDisclosur
           <div className="relative">
             <Shield className="h-10 w-10 text-primary/40 mx-auto mb-4" />
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              지금 바로 시작하세요
+              더 많은 기능이 필요하신가요?
             </h2>
             <p className="mt-3 text-sm text-muted-foreground max-w-sm mx-auto">
-              로그인하면 관심종목 저장, 텔레그램 알림 등 더 많은 기능을 사용할 수 있습니다
+              로그인하면 관심종목 저장, 텔레그램 알림, 북마크 등을 사용할 수 있어요
             </p>
             <a
               href={`${API_BASE}/api/auth/kakao/login`}
-              className="inline-flex items-center justify-center gap-2.5 rounded-2xl px-8 py-3.5 text-sm font-bold transition-all hover:scale-[1.02] active:scale-[0.98] mt-8 shadow-lg shadow-yellow-500/20"
-              style={{ backgroundColor: "#FEE500", color: "#000000" }}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-border px-6 py-2.5 text-sm font-medium text-foreground transition-all hover:bg-muted mt-6"
             >
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M9 0.5C4.029 0.5 0 3.588 0 7.393c0 2.388 1.558 4.495 3.932 5.734l-1.01 3.693c-.088.322.28.577.556.388L7.555 14.58c.474.056.958.087 1.445.087 4.971 0 9-3.088 9-6.893S13.971 0.5 9 0.5"
-                  fill="#000000"
-                />
-              </svg>
-              카카오로 시작하기
+              로그인하기
             </a>
           </div>
         </div>
