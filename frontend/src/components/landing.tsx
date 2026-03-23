@@ -145,7 +145,7 @@ export function Landing({ summary: initialSummary, disclosures: initialDisclosur
             ))}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground text-center py-8">공시 데이터를 불러오는 중입니다...</p>
+          <p className="text-sm text-muted-foreground text-center py-8">공시 데이터가 없습니다</p>
         )}
       </section>
 
