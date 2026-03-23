@@ -10,19 +10,31 @@ import {
   FileText,
   Star,
   Settings,
+  LogIn,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
 
-const links = [
+const guestLinks = [
+  { href: "/", label: "홈" },
+  { href: "/disclosures", label: "공시" },
+];
+
+const authLinks = [
   { href: "/", label: "대시보드" },
   { href: "/watchlist", label: "관심종목" },
   { href: "/disclosures", label: "공시" },
   { href: "/settings", label: "설정" },
 ];
 
-const tabs = [
+const guestTabs = [
+  { href: "/", label: "홈", icon: LayoutDashboard },
+  { href: "/disclosures", label: "공시", icon: FileText },
+  { href: "/login", label: "로그인", icon: LogIn },
+];
+
+const authTabs = [
   { href: "/", label: "홈", icon: LayoutDashboard },
   { href: "/disclosures", label: "공시", icon: FileText },
   { href: "/watchlist", label: "관심", icon: Star },
@@ -34,6 +46,9 @@ export function Nav() {
   const { user, isLoggedIn, logout } = useAuth();
   const [isDark, setIsDark] = useState(false);
   const [badgeCount, setBadgeCount] = useState(0);
+
+  const activeLinks = isLoggedIn ? authLinks : guestLinks;
+  const activeTabs = isLoggedIn ? authTabs : guestTabs;
 
   const fetchCount = useCallback(async () => {
     try {
@@ -81,7 +96,7 @@ export function Nav() {
               </span>
             </Link>
             <nav className="hidden sm:flex items-center gap-1">
-              {links.map((link) => (
+              {activeLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
@@ -144,7 +159,7 @@ export function Nav() {
         style={{ paddingBottom: "var(--safe-area-bottom)" }}
       >
         <div className="flex items-stretch">
-          {tabs.map((tab) => {
+          {activeTabs.map((tab) => {
             const Icon = tab.icon;
             const active = pathname === tab.href;
             return (
