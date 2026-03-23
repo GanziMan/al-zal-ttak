@@ -142,8 +142,22 @@ export const api = {
     );
   },
 
+  getPublicDisclosures: (params?: { days?: number; category?: string; min_score?: number }) => {
+    const q = new URLSearchParams();
+    if (params?.days) q.set("days", String(params.days));
+    if (params?.category && params.category !== "all") q.set("category", params.category);
+    if (params?.min_score) q.set("min_score", String(params.min_score));
+    const qs = q.toString();
+    return request<{ disclosures: Disclosure[]; total: number; pending_analysis: number }>(
+      `/api/disclosures/public${qs ? `?${qs}` : ""}`
+    );
+  },
+
   // 대시보드
   getDashboardSummary: () => request<DashboardSummary>("/api/dashboard/summary"),
+
+  getPublicDashboard: () =>
+    request<DashboardSummary>("/api/dashboard/public"),
 
   // 설정
   getSettings: () => request<AppSettings>("/api/settings"),
