@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/api/", "/auth/", "/settings"],
+        disallow: ["/api/", "/auth/", "/settings", "/watchlist"],
       },
     ],
     sitemap: "https://al-zal-ttak.vercel.app/sitemap.xml",

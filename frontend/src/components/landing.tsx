@@ -19,7 +19,7 @@ const features = [
   {
     icon: BrainCircuit,
     title: "AI 공시 분석",
-    desc: "Gemini AI가 공시를 자동 분류하고 중요도를 평가합니다",
+    desc: "상장기업의 공시(기업 발표 보고서)를 자동 분류하고 중요도를 평가합니다",
     color: "text-violet-500",
     bg: "bg-violet-500/10",
   },
@@ -123,7 +123,7 @@ export function Landing({ summary: initialSummary, disclosures: initialDisclosur
           </h1>
 
           <p className="mt-6 text-base sm:text-lg text-muted-foreground max-w-md mx-auto leading-relaxed">
-            DART 공시를 AI가 자동으로 분석하고,
+            상장기업이 발표하는 주요 소식을 AI가 자동 분석하고,
             <br className="hidden sm:block" />
             호재/악재를 판별해 알려드립니다
           </p>
