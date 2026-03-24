@@ -17,7 +17,7 @@ interface StockChartInnerProps {
 export default function StockChartInner({ prices }: StockChartInnerProps) {
   return (
     <div className="h-48">
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minWidth={0}>
         <LineChart data={prices}>
           <XAxis
             dataKey="date"
