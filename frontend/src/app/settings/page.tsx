@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { api, getCached, setCache, AppSettings } from "@/lib/api";
+import { api, getCached, setCache, isFresh, AppSettings } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/auth-provider";
 
@@ -27,13 +27,17 @@ export default function SettingsPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    if (settings && isFresh("/api/settings")) {
+      setLoading(false);
+      return;
+    }
     async function fetchSettings() {
       try {
         const data = await api.getSettings();
         setSettings(data);
         setCache("/api/settings", data);
       } catch {
-        setError("설정을 불러올 수 없습니다. 백엔드 서버를 확인하세요.");
+        if (!settings) setError("설정을 불러올 수 없습니다. 백엔드 서버를 확인하세요.");
       } finally {
         setLoading(false);
       }

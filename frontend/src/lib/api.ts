@@ -32,7 +32,7 @@ export function setCache<T>(key: string, data: T) {
   }
 }
 
-function isFresh(key: string): boolean {
+export function isFresh(key: string): boolean {
   try {
     const raw = localStorage.getItem(CACHE_PREFIX + key);
     if (!raw) return false;

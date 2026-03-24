@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Plus, CheckCircle, TrendingUp } from "lucide-react";
-import { api, type Corp } from "@/lib/api";
-import type { PopularStock } from "@/lib/api";
+import { api, getCached, setCache, isFresh, type Corp, type PopularStock } from "@/lib/api";
 
 interface PopularStocksProps {
   onAdd: (corp: Corp) => void;
@@ -11,10 +10,12 @@ interface PopularStocksProps {
 }
 
 export function PopularStocks({ onAdd, existingCodes }: PopularStocksProps) {
-  const [stocks, setStocks] = useState<PopularStock[]>([]);
+  const CACHE_KEY = "/api/corps/popular";
+  const [stocks, setStocks] = useState<PopularStock[]>(() => getCached<{ stocks: PopularStock[] }>(CACHE_KEY)?.stocks ?? []);
 
   useEffect(() => {
-    api.getPopularStocks().then((d) => setStocks(d.stocks)).catch(() => {});
+    if (stocks.length > 0 && isFresh(CACHE_KEY)) return;
+    api.getPopularStocks().then((d) => { setStocks(d.stocks); setCache(CACHE_KEY, d); }).catch(() => {});
   }, []);
 
   if (stocks.length === 0) return null;

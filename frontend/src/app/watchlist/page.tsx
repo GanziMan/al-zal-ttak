@@ -6,28 +6,34 @@ import { StockSearch } from "@/components/stock-search";
 import { WatchlistTable } from "@/components/watchlist-table";
 import { PopularStocks } from "@/components/popular-stocks";
 import { SectorAdd } from "@/components/sector-add";
-import { api, getCached, setCache, Corp, WatchlistItem } from "@/lib/api";
+import { api, getCached, setCache, isFresh, Corp, WatchlistItem } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function WatchlistPage() {
-  const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const CACHE_KEY = "/api/watchlist";
+  const cached = getCached<{ watchlist: WatchlistItem[] }>(CACHE_KEY);
+  const [watchlist, setWatchlist] = useState<WatchlistItem[]>(cached?.watchlist ?? []);
+  const [loading, setLoading] = useState(!cached);
   const [error, setError] = useState("");
 
   const fetchWatchlist = useCallback(async () => {
     try {
       const data = await api.getWatchlist();
       setWatchlist(data.watchlist);
-      setCache("/api/watchlist", data);
+      setCache(CACHE_KEY, data);
       setError("");
     } catch {
-      setError("관심종목을 불러올 수 없습니다. 백엔드 서버를 확인하세요.");
+      if (!watchlist.length) setError("관심종목을 불러올 수 없습니다. 백엔드 서버를 확인하세요.");
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    if (cached && isFresh(CACHE_KEY)) {
+      setLoading(false);
+      return;
+    }
     fetchWatchlist();
   }, [fetchWatchlist]);
 

@@ -1,17 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Bookmark, ExternalLink, Trash2 } from "lucide-react";
 import { api, fetchWithRevalidate, Bookmark as BookmarkType } from "@/lib/api";
 
 export function BookmarksSection() {
   const [bookmarks, setBookmarks] = useState<BookmarkType[]>([]);
   const [loading, setLoading] = useState(true);
+  const pendingOps = useRef(0);
 
   useEffect(() => {
     fetchWithRevalidate<{ bookmarks: BookmarkType[] }>(
       "/api/bookmarks",
-      (fresh) => setBookmarks(fresh.bookmarks),
+      (fresh) => { if (pendingOps.current === 0) setBookmarks(fresh.bookmarks); },
     )
       .then((cached) => { if (cached) setBookmarks(cached.bookmarks); })
       .catch(() => {})
@@ -24,13 +25,15 @@ export function BookmarksSection() {
   }
 
   async function handleRemove(rceptNo: string) {
-    const prev = bookmarks;
-    setBookmarks(bookmarks.filter((b) => b.rcept_no !== rceptNo));
+    setBookmarks((prev) => prev.filter((b) => b.rcept_no !== rceptNo));
+    pendingOps.current++;
     try {
       const res = await api.removeBookmark(rceptNo);
-      setBookmarks(res.bookmarks);
+      pendingOps.current--;
+      if (pendingOps.current === 0) setBookmarks(res.bookmarks);
     } catch {
-      setBookmarks(prev);
+      pendingOps.current--;
+      setBookmarks((prev) => prev);
     }
   }
 

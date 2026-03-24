@@ -38,6 +38,7 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const prevPendingRef = useRef(0);
+  const bookmarkOps = useRef(0);
 
   // 비로그인: ISR 데이터를 날짜로 필터링 (KST 기준)
   const filterByDays = useCallback((data: Disclosure[], d: number) => {
@@ -274,12 +275,12 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
                   return;
                 }
                 const exists = bookmarks.some((b) => b.rcept_no === disc.rcept_no);
-                const prev = bookmarks;
                 if (exists) {
-                  setBookmarks(bookmarks.filter((b) => b.rcept_no !== disc.rcept_no));
+                  setBookmarks((prev) => prev.filter((b) => b.rcept_no !== disc.rcept_no));
                 } else {
-                  setBookmarks([...bookmarks, { rcept_no: disc.rcept_no, corp_name: disc.corp_name, report_nm: disc.report_nm, memo: "", created_at: "" }]);
+                  setBookmarks((prev) => [...prev, { rcept_no: disc.rcept_no, corp_name: disc.corp_name, report_nm: disc.report_nm, memo: "", created_at: "" }]);
                 }
+                bookmarkOps.current++;
                 try {
                   const res = exists
                     ? await api.removeBookmark(disc.rcept_no)
@@ -288,9 +289,10 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
                         corp_name: disc.corp_name,
                         report_nm: disc.report_nm,
                       });
-                  setBookmarks(res.bookmarks);
+                  bookmarkOps.current--;
+                  if (bookmarkOps.current === 0) setBookmarks(res.bookmarks);
                 } catch {
-                  setBookmarks(prev);
+                  bookmarkOps.current--;
                   toast.error(exists ? "북마크 해제 실패" : "북마크 추가 실패");
                 }
               }}

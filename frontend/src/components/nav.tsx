@@ -50,12 +50,15 @@ export function Nav() {
   const activeLinks = isLoggedIn ? authLinks : guestLinks;
   const activeTabs = isLoggedIn ? authTabs : guestTabs;
 
+  const lastFetchRef = { current: 0 };
   const fetchCount = useCallback(async () => {
     try {
       if (!isLoggedIn) return;
       if (document.visibilityState !== "visible") return;
+      if (Date.now() - lastFetchRef.current < 60_000) return;
       const since = localStorage.getItem("disclosures_last_seen") || "";
       if (!since) return;
+      lastFetchRef.current = Date.now();
       const data = await api.getDisclosureCount(since);
       setBadgeCount(data.count);
     } catch {

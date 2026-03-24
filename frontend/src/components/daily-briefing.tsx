@@ -3,15 +3,17 @@
 import { useState, useEffect } from "react";
 import { Sparkles, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import Link from "next/link";
-import { api, type DailyBriefing as BriefingType } from "@/lib/api";
+import { api, getCached, setCache, isFresh, type DailyBriefing as BriefingType } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 export function DailyBriefing() {
-  const [data, setData] = useState<BriefingType | null>(null);
+  const CACHE_KEY = "/api/briefing/daily";
+  const [data, setData] = useState<BriefingType | null>(() => getCached<BriefingType>(CACHE_KEY));
 
   useEffect(() => {
-    api.getDailyBriefing().then(setData).catch(() => {});
+    if (data && isFresh(CACHE_KEY)) return;
+    api.getDailyBriefing().then((d) => { setData(d); setCache(CACHE_KEY, d); }).catch(() => {});
   }, []);
 
   if (!data) return null;
