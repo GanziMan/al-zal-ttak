@@ -62,8 +62,8 @@ async def download_corp_codes(api_key: str) -> List[Dict]:
 
     logger.info("Successfully inserted %d corp codes to DB", len(corps))
 
-    global _corps_cache
-    _corps_cache = corps
+    _corps_cache.clear()
+    _corps_cache.extend(corps)
     logger.info("In-memory corps cache updated: %d items", len(corps))
 
     return corps
@@ -71,14 +71,14 @@ async def download_corp_codes(api_key: str) -> List[Dict]:
 
 async def load_cached_corps() -> List[Dict]:
     """DB에서 기업코드 목록 로드 → 인메모리 캐시에 저장"""
-    global _corps_cache
     async with async_session() as session:
         result = await session.execute(select(CorpCode))
         rows = result.scalars().all()
         corps = [{"corp_code": r.corp_code, "corp_name": r.corp_name, "stock_code": r.stock_code} for r in rows]
 
     if corps:
-        _corps_cache = corps
+        _corps_cache.clear()
+        _corps_cache.extend(corps)
         logger.info("In-memory corps cache loaded: %d items", len(corps))
 
     return corps

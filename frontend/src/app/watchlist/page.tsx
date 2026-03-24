@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { StockSearch } from "@/components/stock-search";
 import { WatchlistTable } from "@/components/watchlist-table";
+import { PopularStocks } from "@/components/popular-stocks";
+import { SectorAdd } from "@/components/sector-add";
 import { api, getCached, setCache, Corp, WatchlistItem } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -31,6 +33,11 @@ export default function WatchlistPage() {
   useEffect(() => {
     fetchWatchlist();
   }, [fetchWatchlist]);
+
+  const existingCodes = useMemo(
+    () => new Set(watchlist.map((w) => w.corp_code)),
+    [watchlist],
+  );
 
   async function handleAdd(corp: Corp) {
     // 이미 있으면 무시
@@ -91,6 +98,16 @@ export default function WatchlistPage() {
       </div>
 
       <StockSearch onSelect={handleAdd} />
+
+      <PopularStocks
+        onAdd={handleAdd}
+        existingCodes={existingCodes}
+      />
+
+      <SectorAdd
+        onAdd={handleAdd}
+        existingCodes={existingCodes}
+      />
 
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[12px] text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">

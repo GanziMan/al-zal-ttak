@@ -8,6 +8,7 @@ import {
 } from "@/components/important-disclosures";
 import { DisclosureHistoryChart } from "@/components/disclosure-history-chart";
 import { BookmarksSection } from "@/components/bookmarks-section";
+import { DailyBriefing } from "@/components/daily-briefing";
 import { Landing } from "@/components/landing";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, fetchWithRevalidate, getCached, DashboardSummary, Disclosure } from "@/lib/api";
@@ -67,6 +68,8 @@ function Dashboard() {
           {error}
         </div>
       )}
+
+      <DailyBriefing />
 
       <SummaryCards
         watchlistCount={data?.watchlist_count ?? 0}

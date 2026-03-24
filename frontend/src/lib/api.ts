@@ -199,8 +199,18 @@ export const api = {
   // 유사 공시
   getSimilarDisclosures: (rceptNo: string, limit?: number) => {
     const qs = limit ? `?limit=${limit}` : "";
-    return request<{ similar: SimilarDisclosure[] }>(`/api/disclosures/${rceptNo}/similar${qs}`);
+    return request<{ similar: SimilarDisclosure[]; avg_price_change: number | null }>(`/api/disclosures/${rceptNo}/similar${qs}`);
   },
+
+  // 주가
+  getStockPrices: (corpCode: string, days?: number) => {
+    const qs = days ? `?days=${days}` : "";
+    return request<{ prices: StockPriceDay[] }>(`/api/company/${corpCode}/stock-price${qs}`);
+  },
+
+  // 주가 영향
+  getPriceImpact: (rceptNo: string) =>
+    request<{ impact: PriceImpact | null }>(`/api/disclosures/${rceptNo}/price-impact`),
 
   // 기업 재무
   getCompanySummary: (corpCode: string) =>
@@ -215,6 +225,18 @@ export const api = {
   },
   getCompanyShareholders: (corpCode: string) =>
     request<{ shareholders: ShareholderInfo[] }>(`/api/company/${corpCode}/shareholders`),
+
+  // 브리핑
+  getDailyBriefing: () => request<DailyBriefing>("/api/briefing/daily"),
+
+  // 인기 종목
+  getPopularStocks: (limit?: number) => {
+    const qs = limit ? `?limit=${limit}` : "";
+    return request<{ stocks: PopularStock[] }>(`/api/corps/popular${qs}`);
+  },
+
+  // 업종
+  getSectors: () => request<{ sectors: SectorInfo[] }>("/api/corps/sectors"),
 
   // 인증
   getMe: () => request<AuthUser>("/api/auth/me"),
@@ -294,6 +316,7 @@ export interface SimilarDisclosure {
   category: string;
   importance_score: number;
   summary: string;
+  price_change_5d: number | null;
 }
 
 // 기업 재무 데이터
@@ -341,4 +364,56 @@ export interface AuthUser {
   id: number;
   nickname: string;
   profile_image: string;
+}
+
+export interface PopularStock {
+  corp_code: string;
+  corp_name: string;
+  stock_code: string;
+  watchers: number;
+}
+
+export interface SectorCorp {
+  corp_code: string;
+  corp_name: string;
+  stock_code: string;
+}
+
+export interface SectorInfo {
+  name: string;
+  corps: SectorCorp[];
+}
+
+export interface DailyBriefing {
+  date: string;
+  total: number;
+  bullish: number;
+  bearish: number;
+  neutral: number;
+  top_disclosures: Array<{
+    corp_name: string;
+    report_nm: string;
+    category: string;
+    importance_score: number;
+  }>;
+  narrative: string;
+}
+
+export interface StockPriceDay {
+  date: string;
+  close: number;
+  open: number;
+  high: number;
+  low: number;
+  volume: number;
+  change: number;
+}
+
+export interface PriceImpact {
+  before_price: number;
+  after_price: number;
+  change_1d: number | null;
+  change_3d: number | null;
+  change_5d: number | null;
+  prices: StockPriceDay[];
 }

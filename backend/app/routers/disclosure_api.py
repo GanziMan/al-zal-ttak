@@ -12,10 +12,12 @@ from app.dependencies import get_current_user
 from app.models.user import User
 from app.services.dart_client import DartClient
 from app.services.disclosure_filter import get_watchlist_disclosures
-from app.services.analysis_cache import get_cached_analysis, get_cached_full, save_analysis, search_similar
+from app.services.analysis_cache import get_cached_analysis, get_cached_full, save_analysis, search_similar, search_similar_with_impact
 from app.services.dart_cache import get_cached_disclosures, set_cached_disclosures
 from app.services.settings import load_settings
 from app.services.telegram import send_alert, format_disclosure_alert
+from app.services.stock_price import calculate_price_impact
+from app.services.corp_code_loader import _corps_cache
 from app.agents.runner import analyze_disclosure
 
 logger = logging.getLogger(__name__)
@@ -235,20 +237,41 @@ async def get_public_disclosures(
     }
 
 
+@router.get("/{rcept_no}/price-impact")
+async def get_price_impact(rcept_no: str):
+    cached = await get_cached_full(rcept_no)
+    if not cached:
+        return {"impact": None}
+    corp_name = cached.get("corp_name", "")
+    rcept_dt = cached.get("rcept_dt", "")
+    # corp_name → stock_code, corp_code
+    stock_code = ""
+    corp_code = ""
+    for c in _corps_cache:
+        if c["corp_name"] == corp_name:
+            stock_code = c["stock_code"]
+            corp_code = c["corp_code"]
+            break
+    if not stock_code or not rcept_dt:
+        return {"impact": None}
+    impact = await calculate_price_impact(stock_code, corp_code, rcept_dt)
+    return {"impact": impact}
+
+
 @router.get("/{rcept_no}/similar")
 async def get_similar_disclosures(rcept_no: str, limit: int = Query(5, ge=1, le=20)):
     cached = await get_cached_full(rcept_no)
     if not cached:
-        return {"similar": []}
+        return {"similar": [], "avg_price_change": None}
     analysis = cached.get("analysis", {})
     category = analysis.get("category", "")
     report_nm = cached.get("report_nm", "")
     stop_words = {"의", "및", "등", "에", "을", "를", "이", "가", "은", "는", "로", "과", "와"}
     keywords = [w for w in report_nm.split() if len(w) > 2 and w not in stop_words]
     if not category or not keywords:
-        return {"similar": []}
-    results = await search_similar(category, keywords, exclude_rcept_no=rcept_no, limit=limit)
-    return {"similar": results}
+        return {"similar": [], "avg_price_change": None}
+    results, avg_price_change = await search_similar_with_impact(category, keywords, exclude_rcept_no=rcept_no, limit=limit)
+    return {"similar": results, "avg_price_change": avg_price_change}
 
 
 @router.get("")

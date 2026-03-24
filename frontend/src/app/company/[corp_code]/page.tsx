@@ -17,6 +17,7 @@ import {
 import { FinancialChart } from "@/components/financial-chart";
 import { DividendTable } from "@/components/dividend-table";
 import { ShareholderTable } from "@/components/shareholder-table";
+import { StockPriceChart } from "@/components/stock-price-chart";
 import { useAuth } from "@/components/auth-provider";
 
 export default function CompanyDetailPage() {
@@ -142,6 +143,9 @@ export default function CompanyDetailPage() {
       ) : (
         <Skeleton className="h-24 rounded-2xl" />
       )}
+
+      {/* 주가 차트 */}
+      <StockPriceChart corpCode={corpCode} />
 
       {/* 로딩 안내 */}
       {(!financials || !dividends || !shareholders) && (

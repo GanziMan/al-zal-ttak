@@ -5,6 +5,8 @@ import { ExternalLink, Bookmark, BookmarkCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { api, Disclosure, SimilarDisclosure } from "@/lib/api";
 import { categoryColor, categoryBorder, categoryDot, formatDate, scoreColor } from "@/lib/disclosure-utils";
+import { GlossaryHighlight } from "@/components/glossary-highlight";
+import { PriceImpactBadge } from "@/components/price-impact-badge";
 import { cn } from "@/lib/utils";
 
 interface DisclosureCardProps {
@@ -21,6 +23,7 @@ function openDisclosure(corpName: string, reportNm: string) {
 export function DisclosureCard({ disclosure, isBookmarked, onToggleBookmark }: DisclosureCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [similar, setSimilar] = useState<SimilarDisclosure[] | null>(null);
+  const [avgPriceChange, setAvgPriceChange] = useState<number | null>(null);
   const [similarLoaded, setSimilarLoaded] = useState(false);
   const analysis = disclosure.analysis;
 
@@ -29,6 +32,7 @@ export function DisclosureCard({ disclosure, isBookmarked, onToggleBookmark }: D
       setSimilarLoaded(true);
       api.getSimilarDisclosures(disclosure.rcept_no).then((data) => {
         setSimilar(data.similar);
+        setAvgPriceChange(data.avg_price_change ?? null);
       }).catch(() => setSimilar([]));
     }
   }, [expanded, similarLoaded, disclosure.rcept_no]);
@@ -61,7 +65,7 @@ export function DisclosureCard({ disclosure, isBookmarked, onToggleBookmark }: D
                 className="group/link inline-flex items-center gap-1 hover:text-primary transition-colors text-left"
                 onClick={(e) => { e.stopPropagation(); openDisclosure(disclosure.corp_name, disclosure.report_nm); }}
               >
-                {disclosure.report_nm}
+                <GlossaryHighlight text={disclosure.report_nm} />
                 <ExternalLink className="h-3 w-3 opacity-0 group-hover/link:opacity-60 transition-opacity shrink-0" />
               </button>
             </h3>
@@ -85,9 +89,12 @@ export function DisclosureCard({ disclosure, isBookmarked, onToggleBookmark }: D
             )}
             {analysis ? (
               <div className="flex flex-col items-end gap-1.5">
-                <Badge variant="outline" className={cn("text-[10px] font-medium rounded-md", categoryColor[cat])}>
-                  {cat}
-                </Badge>
+                <div className="flex items-center gap-1">
+                  <Badge variant="outline" className={cn("text-[10px] font-medium rounded-md", categoryColor[cat])}>
+                    {cat}
+                  </Badge>
+                  <PriceImpactBadge rceptNo={disclosure.rcept_no} visible={expanded} />
+                </div>
                 <span className={cn("text-lg font-bold tabular-nums tracking-tighter", scoreColor(score))}>
                   {score}
                 </span>
@@ -105,7 +112,7 @@ export function DisclosureCard({ disclosure, isBookmarked, onToggleBookmark }: D
         {analysis ? (
           <div className="mt-2.5">
             <p className="text-[12px] leading-relaxed text-muted-foreground/70">
-              {analysis.action_item}
+              <GlossaryHighlight text={analysis.action_item} />
             </p>
 
             {/* Expandable AI summary */}
@@ -116,7 +123,7 @@ export function DisclosureCard({ disclosure, isBookmarked, onToggleBookmark }: D
                     AI 분석 요약
                   </p>
                   <p className="text-[12px] leading-relaxed text-foreground/75 whitespace-pre-wrap">
-                    {analysis.summary}
+                    <GlossaryHighlight text={analysis.summary} />
                   </p>
                 </div>
 
@@ -145,6 +152,14 @@ export function DisclosureCard({ disclosure, isBookmarked, onToggleBookmark }: D
                               <span className={cn("text-[10px] font-bold tabular-nums", scoreColor(s.importance_score))}>
                                 {s.importance_score}
                               </span>
+                              {s.price_change_5d !== null && s.price_change_5d !== undefined && (
+                                <span className={cn(
+                                  "text-[9px] font-semibold tabular-nums",
+                                  s.price_change_5d >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400",
+                                )}>
+                                  {s.price_change_5d > 0 ? "+" : ""}{s.price_change_5d}%
+                                </span>
+                              )}
                             </div>
                             <button
                               type="button"
@@ -159,6 +174,19 @@ export function DisclosureCard({ disclosure, isBookmarked, onToggleBookmark }: D
                           </span>
                         </div>
                       ))}
+                      {avgPriceChange !== null && (
+                        <div className="pt-2 border-t border-border/30">
+                          <span className="text-[10px] text-muted-foreground">
+                            유사 공시 평균 주가 변동 (5일):{" "}
+                            <span className={cn(
+                              "font-semibold",
+                              avgPriceChange >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400",
+                            )}>
+                              {avgPriceChange > 0 ? "+" : ""}{avgPriceChange}%
+                            </span>
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

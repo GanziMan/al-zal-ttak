@@ -1,9 +1,13 @@
 """AI 분석 결과 캐싱 (DB 기반)"""
 from __future__ import annotations
 
+import logging
+
 from sqlalchemy import select, cast, String
 from app.database import async_session
 from app.models.analysis_cache import AnalysisCache
+
+logger = logging.getLogger(__name__)
 
 
 async def get_cached_analysis(rcept_no: str) -> dict | None:
@@ -108,3 +112,45 @@ async def search_similar(
     for item in scored:
         del item["_match"]
     return scored[:limit]
+
+
+async def search_similar_with_impact(
+    category: str,
+    keywords: list[str],
+    exclude_rcept_no: str,
+    limit: int = 5,
+) -> tuple[list[dict], float | None]:
+    """유사 공시 검색 + 각 결과에 주가 영향 추가"""
+    from app.services.stock_price import calculate_price_impact
+    from app.services.corp_code_loader import _corps_cache
+
+    results = await search_similar(category, keywords, exclude_rcept_no, limit)
+
+    # corp_name → stock_code, corp_code 매핑
+    name_map: dict[str, dict] = {}
+    for c in _corps_cache:
+        name_map[c["corp_name"]] = c
+
+    changes = []
+    for r in results:
+        corp_info = name_map.get(r["corp_name"])
+        if not corp_info or not r.get("rcept_dt"):
+            r["price_change_5d"] = None
+            continue
+        try:
+            impact = await calculate_price_impact(
+                corp_info["stock_code"],
+                corp_info["corp_code"],
+                r["rcept_dt"],
+            )
+            if impact and impact.get("change_5d") is not None:
+                r["price_change_5d"] = impact["change_5d"]
+                changes.append(impact["change_5d"])
+            else:
+                r["price_change_5d"] = None
+        except Exception:
+            logger.warning("Price impact failed for %s", r.get("rcept_no"))
+            r["price_change_5d"] = None
+
+    avg_price_change = round(sum(changes) / len(changes), 2) if changes else None
+    return results, avg_price_change

@@ -9,6 +9,8 @@ from fastapi import APIRouter, Query
 from app.config import settings
 from app.services.dart_client import DartClient
 from app.services.financial_data import get_all_company_data, get_financial_summary, get_dividend_history, get_shareholders
+from app.services.stock_price import get_stock_prices
+from app.services.corp_code_loader import _corps_cache
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +44,23 @@ async def get_shareholders_api(
     dart_client = DartClient(api_key=settings.dart_api_key)
     data = await get_shareholders(dart_client, corp_code)
     return {"shareholders": data}
+
+
+@router.get("/{corp_code}/stock-price")
+async def get_stock_price(
+    corp_code: str,
+    days: int = Query(30, ge=1, le=90),
+):
+    # corp_code → stock_code 변환
+    stock_code = ""
+    for c in _corps_cache:
+        if c["corp_code"] == corp_code:
+            stock_code = c["stock_code"]
+            break
+    if not stock_code:
+        return {"prices": []}
+    prices = await get_stock_prices(stock_code, corp_code, days=days)
+    return {"prices": prices}
 
 
 @router.get("/{corp_code}/summary")
