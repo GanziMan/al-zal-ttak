@@ -225,7 +225,7 @@ export function Landing({ summary: initialSummary, disclosures: initialDisclosur
               더 많은 기능이 필요하신가요?
             </h2>
             <p className="mt-3 text-sm text-muted-foreground max-w-sm mx-auto">
-              로그인하면 관심종목 저장, 텔레그램 알림, 북마크 등을 사용할 수 있어요
+              로그인하면 관심종목 저장, 오늘의 브리핑, 북마크 등을 사용할 수 있어요
             </p>
             <a
               href={`${API_BASE}/api/auth/kakao/login`}

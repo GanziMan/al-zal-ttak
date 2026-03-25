@@ -103,7 +103,7 @@ export default function OgImage() {
             marginTop: "40px",
           }}
         >
-          {["AI 공시 분석", "호재/악재 판별", "관심종목 추적", "텔레그램 알림"].map(
+          {["AI 공시 분석", "호재/악재 판별", "관심종목 추적", "오늘의 브리핑"].map(
             (label) => (
               <div
                 key={label}
