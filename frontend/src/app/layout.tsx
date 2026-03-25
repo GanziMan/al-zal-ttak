@@ -129,7 +129,7 @@ export default function RootLayout({
         <Script
           id="theme-init"
           strategy="beforeInteractive"
-        >{`(function(){try{var d=document.documentElement;var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){d.classList.add('dark')}}catch(e){}})()`}</Script>
+        >{`(function(){try{var d=document.documentElement;var t=localStorage.getItem('theme');if(t==='dark'){d.classList.add('dark')}}catch(e){}})()`}</Script>
         <SwRegister />
         <AuthProvider>
           <Nav />
