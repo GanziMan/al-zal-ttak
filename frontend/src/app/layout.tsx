@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const SITE_URL = "https://al-zal-ttak.vercel.app";
+const SITE_URL = "https://al-gong-ttak.vercel.app";
 const SITE_NAME = "알공딱";
 const SITE_TITLE = "알공딱 | 공시, 알아서 공시 딱";
 const SITE_DESC = "DART 공시를 AI가 자동으로 분석하고 호재/악재를 판별해드립니다. 관심종목 추적, 오늘의 브리핑까지.";
@@ -106,7 +106,7 @@ export default function RootLayout({
               "@type": "WebApplication",
               name: "알공딱",
               alternateName: "ALZALTTAK",
-              url: "https://al-zal-ttak.vercel.app",
+              url: "https://al-gong-ttak.vercel.app",
               description: "DART 공시를 AI가 자동으로 분석하고 호재/악재를 판별해드립니다.",
               applicationCategory: "FinanceApplication",
               operatingSystem: "Web",

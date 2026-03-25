@@ -23,7 +23,7 @@ GitHub push 시 Vercel에서 자동 빌드/배포.
 | `KAKAO_CLIENT_SECRET` | 카카오 클라이언트 시크릿 |
 | `KAKAO_REDIRECT_URI` | `https://<railway-url>/api/auth/kakao/callback` |
 | `JWT_SECRET` | JWT 서명 비밀키 (32자 이상 랜덤) |
-| `FRONTEND_URL` | `https://al-zal-ttak.vercel.app` |
+| `FRONTEND_URL` | `https://al-gong-ttak.vercel.app` |
 | `TELEGRAM_BOT_TOKEN` | (선택) 텔레그램 봇 토큰 |
 | `TELEGRAM_CHAT_ID` | (선택) 텔레그램 채팅 ID |
 | `GOOGLE_API_KEY` | Gemini API 키 |
@@ -42,7 +42,7 @@ GitHub push 시 Vercel에서 자동 빌드/배포.
 ## 카카오 OAuth 설정
 
 1. [Kakao Developers](https://developers.kakao.com) → 앱 생성
-2. **플랫폼** → Web → `https://al-zal-ttak.vercel.app` 등록
+2. **플랫폼** → Web → `https://al-gong-ttak.vercel.app` 등록
 3. **카카오 로그인** 활성화
 4. **Redirect URI**: `https://<railway-url>/api/auth/kakao/callback`
 5. **동의 항목**: 닉네임, 프로필 사진 설정

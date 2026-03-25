@@ -137,7 +137,7 @@
 ### 3.2 디렉토리 구조
 
 ```
-al-zal-ttak/
+al-gong-ttak/
 ├── frontend/
 │   ├── src/
 │   │   ├── app/
@@ -588,7 +588,7 @@ npm run dev
 | Origin                           | 환경      |
 | -------------------------------- | --------- |
 | `http://localhost:3000`          | 로컬 개발 |
-| `https://al-zal-ttak.vercel.app` | 프로덕션  |
+| `https://al-gong-ttak.vercel.app` | 프로덕션  |
 
 ---
 

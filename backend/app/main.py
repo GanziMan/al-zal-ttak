@@ -214,7 +214,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://al-zal-ttak.vercel.app",
+        "https://al-gong-ttak.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
