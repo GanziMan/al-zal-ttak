@@ -116,7 +116,7 @@ export function Landing({ summary: initialSummary, disclosures: initialDisclosur
             <span className="text-foreground">공시,</span>
             <br />
             <span className="bg-gradient-to-r from-primary via-violet-500 to-primary bg-clip-text text-transparent">
-              알아서 잘 딱
+              알아서 딱
             </span>
             <br />
             <span className="text-foreground">분석해드립니다</span>

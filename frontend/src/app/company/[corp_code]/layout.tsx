@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: `${name} - 기업분석`,
       description: `${name}의 재무제표, 배당, 대주주 현황을 확인하세요.`,
       openGraph: {
-        title: `${name} 기업분석 | 알잘딱`,
+        title: `${name} 기업분석 | 알공딱`,
         description: `${name}의 재무제표, 배당, 대주주 현황`,
       },
     };

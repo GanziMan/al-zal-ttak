@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "알잘딱 — 공시, 알아서 잘 딱 깔끔하게";
+export const alt = "알공딱 — 공시, 알아서 공시 딱";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -80,7 +80,7 @@ export default function OgImage() {
               letterSpacing: "-1px",
             }}
           >
-            알잘딱
+            알공딱
           </span>
           <span
             style={{
@@ -91,7 +91,7 @@ export default function OgImage() {
               color: "transparent",
             }}
           >
-            공시, 알아서 잘 딱 깔끔하게
+            공시, 알아서 공시 딱
           </span>
         </div>
 

@@ -47,7 +47,7 @@ async def get_chat_id():
 
 async def send_test_message(chat_id):
     """테스트 메시지 전송"""
-    message = """🔔 *알잘딱 공시봇* 테스트
+    message = """🔔 *알공딱 공시봇* 테스트
 
 🟢 *삼성전자* 공시 알림
 

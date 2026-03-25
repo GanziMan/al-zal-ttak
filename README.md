@@ -1,4 +1,4 @@
-# 알잘딱 (ALZALTTAK)
+# 알공딱 (ALZALTTAK)
 
 AI 기반 한국 주식시장 DART 공시 분석 서비스
 
