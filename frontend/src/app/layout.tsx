@@ -65,6 +65,9 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: SITE_URL,
+    types: {
+      "application/rss+xml": `${SITE_URL}/feed.xml`,
+    },
   },
   verification: {
     google: "Zl29et0mZnPrc2Zjwn8RJ3vjPez_FzrfQmrle9GuAbM",
