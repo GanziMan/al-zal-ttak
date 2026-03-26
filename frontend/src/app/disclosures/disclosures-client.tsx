@@ -77,11 +77,31 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
 
   const fetchDisclosures = useCallback(async (isPolling = false) => {
     if (!isLoggedIn) {
-      // 비로그인: ISR 데이터는 이미 있으므로 초기 로딩만 처리
+      // 비로그인: 서버 초기데이터 우선 사용, 없으면 public API 폴백
+      if (initialDisclosures.length > 0) {
+        if (!isPolling) {
+          setDisclosures(initialDisclosures);
+          setPendingAnalysis(0);
+          setLoading(false);
+        }
+        return;
+      }
+
       if (!isPolling) {
-        setDisclosures(initialDisclosures);
-        setPendingAnalysis(0);
-        setLoading(false);
+        try {
+          const data = await api.getPublicDisclosures({
+            days,
+            category: category === "all" ? undefined : category,
+            min_score: minScore || undefined,
+          });
+          setDisclosures(data.disclosures);
+          setPendingAnalysis(data.pending_analysis);
+          setError("");
+        } catch {
+          setError("공시 데이터를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.");
+        } finally {
+          setLoading(false);
+        }
       }
       return;
     }

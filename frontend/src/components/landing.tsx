@@ -55,9 +55,14 @@ export function Landing({ summary: initialSummary, disclosures: initialDisclosur
       try {
         const [dashData, discData] = await Promise.all([
           api.getPublicDashboard(),
-          api.getPublicDisclosures({ days: 7 }),
+          api.getPublicDisclosures({ days: 3 }),
         ]);
-        setSummary(dashData);
+        setSummary({
+          ...dashData,
+          today_disclosures: discData.total,
+          bullish: discData.disclosures.filter((d) => d.analysis?.category === "호재").length,
+          bearish: discData.disclosures.filter((d) => d.analysis?.category === "악재").length,
+        });
         setDisclosures(discData.disclosures.slice(0, 10));
       } catch {
         // silent
@@ -82,11 +87,12 @@ export function Landing({ summary: initialSummary, disclosures: initialDisclosur
     }
     pollRef.current = setInterval(async () => {
       try {
-        const data = await api.getPublicDisclosures({ days: 7 });
+        const data = await api.getPublicDisclosures({ days: 3 });
         const fresh = data.disclosures.slice(0, 10);
         setDisclosures(fresh);
         setSummary((prev) => prev ? {
           ...prev,
+          today_disclosures: data.total,
           bullish: data.disclosures.filter((d) => d.analysis?.category === "호재").length,
           bearish: data.disclosures.filter((d) => d.analysis?.category === "악재").length,
         } : prev);
@@ -140,17 +146,17 @@ export function Landing({ summary: initialSummary, disclosures: initialDisclosur
 
       {/* 실시간 요약 */}
       <section className="grid grid-cols-3 gap-3">
-        <Link href={{ pathname: "/disclosures", query: { days: "7" } }} className="glass-card rounded-2xl p-4 text-center transition-colors hover:bg-accent/40">
-          <p className="text-[10px] font-medium text-muted-foreground">최근 7일 공시</p>
+        <Link prefetch={true} href={{ pathname: "/disclosures", query: { days: "3" } }} className="glass-card rounded-2xl p-4 text-center transition-colors hover:bg-accent/40">
+          <p className="text-[10px] font-medium text-muted-foreground">최근 3일 공시</p>
           <p className="text-2xl font-black text-foreground mt-1">{summary?.today_disclosures ?? "-"}</p>
           <p className="text-[10px] text-muted-foreground/60 mt-0.5">건</p>
         </Link>
-        <Link href={{ pathname: "/disclosures", query: { days: "7", category: "호재" } }} className="glass-card rounded-2xl p-4 text-center transition-colors hover:bg-accent/40">
+        <Link prefetch={true} href={{ pathname: "/disclosures", query: { days: "3", category: "호재" } }} className="glass-card rounded-2xl p-4 text-center transition-colors hover:bg-accent/40">
           <p className="text-[10px] font-medium text-muted-foreground">호재</p>
           <p className="text-2xl font-black text-emerald-500 mt-1">{summary?.bullish ?? "-"}</p>
           <p className="text-[10px] text-muted-foreground/60 mt-0.5">건</p>
         </Link>
-        <Link href={{ pathname: "/disclosures", query: { days: "7", category: "악재" } }} className="glass-card rounded-2xl p-4 text-center transition-colors hover:bg-accent/40">
+        <Link prefetch={true} href={{ pathname: "/disclosures", query: { days: "3", category: "악재" } }} className="glass-card rounded-2xl p-4 text-center transition-colors hover:bg-accent/40">
           <p className="text-[10px] font-medium text-muted-foreground">악재</p>
           <p className="text-2xl font-black text-red-500 mt-1">{summary?.bearish ?? "-"}</p>
           <p className="text-[10px] text-muted-foreground/60 mt-0.5">건</p>

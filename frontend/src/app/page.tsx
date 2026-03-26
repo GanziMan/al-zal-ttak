@@ -31,6 +31,7 @@ interface DashboardSummary {
 
 interface PublicDisclosuresResponse {
   disclosures: Disclosure[];
+  total: number;
 }
 
 // 랜딩은 ISR로 미리 생성해 초기 로딩 지연을 줄임
@@ -45,7 +46,7 @@ export default async function HomePage() {
       fetch(`${API_BASE}/api/dashboard/public`, {
         next: { revalidate },
       }),
-      fetch(`${API_BASE}/api/disclosures/public?days=7`, {
+      fetch(`${API_BASE}/api/disclosures/public?days=3`, {
         next: { revalidate },
       }),
     ]);
@@ -57,6 +58,15 @@ export default async function HomePage() {
     if (disclosuresRes.ok) {
       const data: PublicDisclosuresResponse = await disclosuresRes.json();
       disclosures = data.disclosures.slice(0, 10);
+
+      if (summary) {
+        summary = {
+          ...summary,
+          today_disclosures: data.total,
+          bullish: data.disclosures.filter((d) => d.analysis?.category === "호재").length,
+          bearish: data.disclosures.filter((d) => d.analysis?.category === "악재").length,
+        };
+      }
     }
   } catch {
     // 백엔드 응답 실패 시 클라이언트 폴백 fetch 사용
