@@ -20,19 +20,36 @@ export default function StockChartInner({ prices }: StockChartInnerProps) {
   console.log("📊 Close value type:", typeof prices[0]?.close);
   console.log("📊 Data length:", prices.length);
 
+  if (!prices || prices.length === 0) {
+    return (
+      <div className="h-48 w-full flex items-center justify-center text-sm text-muted-foreground">
+        데이터가 없습니다
+      </div>
+    );
+  }
+
   // Ensure close values are numbers (handle potential string serialization)
   const chartData = prices.map((p) => ({
-    ...p,
+    date: p.date,
     close: Number(p.close),
     open: Number(p.open),
     high: Number(p.high),
     low: Number(p.low),
   }));
 
+  // Calculate domain manually with padding
+  const closeValues = chartData.map(d => d.close);
+  const minClose = Math.min(...closeValues);
+  const maxClose = Math.max(...closeValues);
+  const padding = (maxClose - minClose) * 0.1 || 100;
+
+  console.log("📊 Chart data processed:", chartData.slice(0, 3));
+  console.log("📊 Y-axis range:", minClose, "to", maxClose);
+
   return (
     <div className="h-48 w-full">
-      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-        <LineChart data={chartData}>
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
           <XAxis
             dataKey="date"
             tick={{ fontSize: 10 }}
@@ -40,7 +57,7 @@ export default function StockChartInner({ prices }: StockChartInnerProps) {
           />
           <YAxis
             tick={{ fontSize: 10 }}
-            domain={["dataMin - 100", "dataMax + 100"]}
+            domain={[minClose - padding, maxClose + padding]}
             tickFormatter={(v: number) => v.toLocaleString()}
           />
           <Tooltip
@@ -56,8 +73,8 @@ export default function StockChartInner({ prices }: StockChartInnerProps) {
           <Line
             type="monotone"
             dataKey="close"
-            stroke="hsl(var(--primary))"
-            strokeWidth={3}
+            stroke="#6366f1"
+            strokeWidth={2}
             dot={true}
             activeDot={{ r: 6 }}
             isAnimationActive={false}

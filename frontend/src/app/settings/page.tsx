@@ -70,11 +70,36 @@ export default function SettingsPage() {
 
   if (loading || !settings) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 max-w-2xl">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">설정</h1>
-          <p className="text-[12px] text-muted-foreground mt-0.5">설정을 불러오는 중...</p>
+          <p className="text-[12px] text-muted-foreground mt-0.5">
+            알림 및 필터를 설정하세요
+          </p>
         </div>
+        {/* Loading skeleton */}
+        <div className="glass-card rounded-2xl overflow-hidden animate-pulse">
+          <div className="border-b border-border/30 px-4 py-3 h-10 bg-muted/20" />
+          <div className="p-4 space-y-5">
+            <div className="space-y-2">
+              <div className="h-3 w-20 bg-muted rounded" />
+              <div className="flex gap-2">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="h-6 w-16 bg-muted rounded-lg" />
+                ))}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="h-3 w-24 bg-muted rounded" />
+              <div className="h-9 w-40 bg-muted rounded-xl" />
+            </div>
+            <div className="space-y-2">
+              <div className="h-3 w-24 bg-muted rounded" />
+              <div className="h-9 w-40 bg-muted rounded-xl" />
+            </div>
+          </div>
+        </div>
+        <div className="h-9 w-24 bg-muted rounded-xl animate-pulse" />
       </div>
     );
   }
