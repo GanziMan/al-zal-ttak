@@ -7,7 +7,8 @@ from datetime import datetime, timedelta
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import select
+from fastapi.responses import JSONResponse
+from sqlalchemy import select, text
 
 from app.config import settings
 from app.database import init_db, async_session
@@ -235,4 +236,13 @@ app.include_router(briefing_api.router, prefix="/api/briefing", tags=["브리핑
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok"}
+    try:
+        async with async_session() as session:
+            await session.execute(text("SELECT 1"))
+        return {"status": "ok", "db": "ok"}
+    except Exception:
+        logger.exception("Health check failed: DB unreachable")
+        return JSONResponse(
+            status_code=503,
+            content={"status": "degraded", "db": "unreachable"},
+        )
