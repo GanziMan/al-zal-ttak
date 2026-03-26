@@ -227,12 +227,12 @@ export function Landing({ summary: initialSummary, disclosures: initialDisclosur
             <p className="mt-3 text-sm text-muted-foreground max-w-sm mx-auto">
               로그인하면 관심종목 저장, 오늘의 브리핑, 북마크 등을 사용할 수 있어요
             </p>
-            <a
-              href={`${API_BASE}/api/auth/kakao/login`}
+            <Link
+              href={`/login`}
               className="inline-flex items-center justify-center gap-2 rounded-2xl border border-border px-6 py-2.5 text-sm font-medium text-foreground transition-all hover:bg-muted mt-6"
             >
               로그인하기
-            </a>
+            </Link>
           </div>
         </div>
       </section>
