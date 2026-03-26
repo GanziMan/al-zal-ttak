@@ -11,6 +11,18 @@ interface CacheEntry<T> {
   ts: number;
 }
 
+export class ApiError extends Error {
+  status: number;
+  details?: string;
+
+  constructor(message: string, status: number, details?: string) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.details = details;
+  }
+}
+
 export function getCached<T>(key: string): T | null {
   try {
     const raw = localStorage.getItem(CACHE_PREFIX + key);
@@ -62,7 +74,13 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     throw new Error("Unauthorized");
   }
   if (!res.ok) {
-    throw new Error(`API error: ${res.status}`);
+    let details = "";
+    try {
+      details = await res.text();
+    } catch {
+      // ignore
+    }
+    throw new ApiError(`API error: ${res.status}`, res.status, details || undefined);
   }
   return res.json();
 }

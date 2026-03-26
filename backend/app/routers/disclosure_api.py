@@ -30,6 +30,31 @@ _analyzing_rcept_nos: set[str] = set()  # 현재 분석 중인 공시 번호
 _analysis_semaphore = asyncio.Semaphore(CONCURRENT_ANALYSIS_LIMIT)
 
 
+def _normalize_action_item(category: str, action_item: str) -> str:
+    text = (action_item or "").strip()
+    banned_phrases = [
+        "별도 대응 불필요",
+        "대응은 불필요",
+        "판단하기 어렵",
+        "영향은 제한적이므로",
+        "직접적인 영향은 제한적이므로",
+    ]
+    if any(p in text for p in banned_phrases):
+        if category == "단순정보":
+            return "정기 공시 제출 건입니다. 핵심 지표 변동 여부를 함께 확인하세요."
+        return "핵심 공시 수치와 후속 공시 여부를 확인하며 보수적으로 대응하세요."
+    return text or "핵심 공시 수치와 후속 공시 여부를 확인하세요."
+
+
+def _normalize_analysis(analysis: dict | None) -> dict | None:
+    if not analysis:
+        return analysis
+    normalized = dict(analysis)
+    category = normalized.get("category", "단순정보")
+    normalized["action_item"] = _normalize_action_item(category, normalized.get("action_item", ""))
+    return normalized
+
+
 async def _fetch_document_text(rcept_no: str) -> str:
     """공시 본문 텍스트를 DART에서 가져온다."""
     if not rcept_no:
@@ -51,7 +76,7 @@ async def _enrich_one(d: dict) -> dict:
     cached = (await get_cached_analysis(rcept_no)) if rcept_no else None
 
     if cached:
-        d["analysis"] = cached
+        d["analysis"] = _normalize_analysis(cached)
         return d
 
     try:
@@ -73,7 +98,7 @@ async def _enrich_one(d: dict) -> dict:
                 "corp_name": d.get("corp_name", ""),
                 "report_nm": d.get("report_nm", ""),
             })
-        d["analysis"] = analysis
+        d["analysis"] = _normalize_analysis(analysis)
     except Exception:
         logger.exception("AI analysis failed for %s: %s", d.get("corp_name", ""), d.get("report_nm", ""))
         # 실패해도 DB에 저장해서 무한 재시도 방지
@@ -89,7 +114,7 @@ async def _enrich_one(d: dict) -> dict:
                 "corp_name": d.get("corp_name", ""),
                 "report_nm": d.get("report_nm", ""),
             })
-        d["analysis"] = fallback
+        d["analysis"] = _normalize_analysis(fallback)
 
     return d
 
@@ -223,7 +248,7 @@ async def get_public_disclosures(
 
     pending = []
     for d, cached in zip(disclosures, cached_results):
-        d["analysis"] = cached
+        d["analysis"] = _normalize_analysis(cached)
         if cached is None:
             pending.append(d)
 
@@ -283,7 +308,7 @@ async def get_disclosures(
 
     pending = []
     for d, cached in zip(disclosures, cached_results):
-        d["analysis"] = cached
+        d["analysis"] = _normalize_analysis(cached)
         if cached is None:
             pending.append(d)
 

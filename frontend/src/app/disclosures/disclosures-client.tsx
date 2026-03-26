@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PullToRefresh } from "@/components/pull-to-refresh";
 import { EmptyState } from "@/components/empty-state";
 import { FileText, Star } from "lucide-react";
-import { api, fetchWithRevalidate, getCached, Bookmark, Disclosure } from "@/lib/api";
+import { ApiError, api, fetchWithRevalidate, getCached, Bookmark, Disclosure } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
 import { cn } from "@/lib/utils";
 
@@ -41,11 +41,21 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
   const [pendingAnalysis, setPendingAnalysis] = useState(0);
   const [filtering, setFiltering] = useState(false);
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
+  const requestSeqRef = useRef(0);
   const bookmarksRef = useRef<Bookmark[]>([]);
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pollDelayRef = useRef(5000);
+  const retryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retryCountRef = useRef(0);
   const prevPendingRef = useRef(0);
   const bookmarkOps = useRef(0);
+
+  const toErrorMessage = useCallback((err: unknown, fallback: string) => {
+    if (err instanceof ApiError) {
+      return `${fallback} (HTTP ${err.status})`;
+    }
+    return fallback;
+  }, []);
 
   useEffect(() => {
     bookmarksRef.current = bookmarks;
@@ -89,6 +99,9 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
   }, [category, days, updateURL]);
 
   const fetchDisclosures = useCallback(async (isPolling = false) => {
+    const reqId = isPolling ? requestSeqRef.current : ++requestSeqRef.current;
+    const isStale = () => !isPolling && reqId !== requestSeqRef.current;
+
     // 특정 종목 검색: 로그인 여부와 상관없이 public API 사용
     if (corpCode) {
       if (!isPolling) {
@@ -100,12 +113,15 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
             min_score: minScore || undefined,
             corp_code: corpCode,
           });
+          if (isStale()) return;
           setDisclosures(data.disclosures);
           setPendingAnalysis(data.pending_analysis);
           setError("");
-        } catch {
-          setError("공시 데이터를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.");
+        } catch (err) {
+          if (isStale()) return;
+          setError(toErrorMessage(err, "공시 데이터를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요."));
         } finally {
+          if (isStale()) return;
           setLoading(false);
           setFiltering(false);
         }
@@ -116,9 +132,11 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
     if (!isLoggedIn) {
       if (initialDisclosures.length > 0) {
         if (!isPolling) {
+          if (isStale()) return;
           setDisclosures(initialDisclosures);
           setPendingAnalysis(0);
           setLoading(false);
+          setError("");
         }
         return;
       }
@@ -130,12 +148,15 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
             category: category === "all" ? undefined : category,
             min_score: minScore || undefined,
           });
+          if (isStale()) return;
           setDisclosures(data.disclosures);
           setPendingAnalysis(data.pending_analysis);
           setError("");
-        } catch {
-          setError("공시 데이터를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.");
+        } catch (err) {
+          if (isStale()) return;
+          setError(toErrorMessage(err, "공시 데이터를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요."));
         } finally {
+          if (isStale()) return;
           setLoading(false);
         }
       }
@@ -155,19 +176,23 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
         const cached = await fetchWithRevalidate<{ disclosures: Disclosure[]; total: number; pending_analysis: number }>(
           path,
           (fresh) => {
+            if (isStale()) return;
             setDisclosures(fresh.disclosures);
             setPendingAnalysis(fresh.pending_analysis);
           },
           `disclosures_${days}_${category}_${minScore}`,
         );
+        if (isStale()) return;
         if (cached) {
           setDisclosures(cached.disclosures);
           setPendingAnalysis(cached.pending_analysis);
         }
         setError("");
-      } catch {
-        setError("공시 데이터를 불러올 수 없습니다. 백엔드 서버를 확인하세요.");
+      } catch (err) {
+        if (isStale()) return;
+        setError(toErrorMessage(err, "공시 데이터를 불러올 수 없습니다. 백엔드 서버를 확인하세요."));
       } finally {
+        if (isStale()) return;
         setLoading(false);
         setFiltering(false);
       }
@@ -180,12 +205,11 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
         });
         setDisclosures(data.disclosures);
         setPendingAnalysis(data.pending_analysis);
-        setError("");
       } catch {
         // 폴링 실패는 무시
       }
     }
-  }, [days, category, minScore, corpCode, isLoggedIn, initialDisclosures]);
+  }, [days, category, minScore, corpCode, isLoggedIn, initialDisclosures, toErrorMessage]);
 
   useEffect(() => {
     if (corpCode) setLoading(true);
@@ -315,6 +339,51 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
     toast.success("새로고침 완료");
   };
 
+  // 에러 + 빈 데이터 상태면 자동 재시도 (백오프)
+  useEffect(() => {
+    const shouldRetry = !!error && !loading && filtered.length === 0;
+    if (!shouldRetry) {
+      retryCountRef.current = 0;
+      if (retryRef.current) {
+        clearTimeout(retryRef.current);
+        retryRef.current = null;
+      }
+      return;
+    }
+
+    const delay = Math.min(2000 * (2 ** retryCountRef.current), 15000);
+    retryRef.current = setTimeout(() => {
+      retryCountRef.current += 1;
+      fetchDisclosures(false);
+    }, delay);
+
+    return () => {
+      if (retryRef.current) {
+        clearTimeout(retryRef.current);
+        retryRef.current = null;
+      }
+    };
+  }, [error, loading, filtered.length, fetchDisclosures]);
+
+  // 탭 복귀/네트워크 복구 시 재요청
+  useEffect(() => {
+    const shouldRecover = () => !!error && !loading && filtered.length === 0;
+    const recover = () => {
+      if (shouldRecover()) fetchDisclosures(false);
+    };
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") recover();
+    };
+
+    window.addEventListener("online", recover);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.removeEventListener("online", recover);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [error, loading, filtered.length, fetchDisclosures]);
+
   return (
     <PullToRefresh onRefresh={handleRefresh}>
       <div className="space-y-6">
@@ -362,9 +431,18 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
         />
       </div>
 
-      {error && (
+      {error && filtered.length === 0 && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[12px] text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
-          {error}
+          <div className="flex items-center justify-between gap-3">
+            <span>{error}</span>
+            <button
+              type="button"
+              onClick={() => fetchDisclosures(false)}
+              className="shrink-0 rounded-md border border-red-300/70 px-2 py-1 text-[11px] font-semibold hover:bg-red-100/70 dark:border-red-700 dark:hover:bg-red-900/40"
+            >
+              다시 시도
+            </button>
+          </div>
         </div>
       )}
 
