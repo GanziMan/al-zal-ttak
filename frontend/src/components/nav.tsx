@@ -75,6 +75,16 @@ export function Nav() {
     }
   }, [isLoggedIn]);
 
+  const markDisclosuresAsSeen = useCallback(() => {
+    const today = new Date();
+    const yyyymmdd = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, "0")}${String(today.getDate()).padStart(2, "0")}`;
+    localStorage.setItem("disclosures_last_seen", yyyymmdd);
+    setBadgeCount(0);
+    lastFetchRef.current = Date.now();
+  }, []);
+
+  const visibleBadgeCount = isActive("/disclosures") ? 0 : badgeCount;
+
   useEffect(() => {
     fetchCount();
     const interval = setInterval(fetchCount, 300_000);
@@ -112,6 +122,9 @@ export function Nav() {
                   key={link.href}
                   href={link.href}
                   prefetch={true}
+                  onClick={() => {
+                    if (link.href === "/disclosures") markDisclosuresAsSeen();
+                  }}
                   className={cn(
                     "relative px-3.5 py-2 text-[13px] font-medium transition-colors rounded-lg touch-manipulation",
                     isActive(link.href)
@@ -120,9 +133,9 @@ export function Nav() {
                   )}
                 >
                   {link.label}
-                  {link.href === "/disclosures" && badgeCount > 0 && (
+                  {link.href === "/disclosures" && visibleBadgeCount > 0 && (
                     <span className="absolute -top-1 -right-1 h-4 min-w-4 rounded-full bg-red-500 text-[9px] text-white flex items-center justify-center px-1 font-bold">
-                      {badgeCount > 99 ? "99+" : badgeCount}
+                      {visibleBadgeCount > 99 ? "99+" : visibleBadgeCount}
                     </span>
                   )}
                 </Link>
@@ -179,6 +192,9 @@ export function Nav() {
                 key={tab.href}
                 href={tab.href}
                 prefetch={true}
+                onClick={() => {
+                  if (tab.href === "/disclosures") markDisclosuresAsSeen();
+                }}
                 className={cn(
                   "relative flex-1 flex flex-col items-center justify-center gap-0.5 py-2 min-h-[3.5rem] transition-colors touch-manipulation active:scale-95",
                   active ? "text-primary" : "text-muted-foreground",
@@ -193,9 +209,9 @@ export function Nav() {
                 >
                   {tab.label}
                 </span>
-                {tab.href === "/disclosures" && badgeCount > 0 && (
+                {tab.href === "/disclosures" && visibleBadgeCount > 0 && (
                   <span className="absolute top-1 right-1/4 h-4 min-w-4 rounded-full bg-red-500 text-[9px] text-white flex items-center justify-center px-1 font-bold">
-                    {badgeCount > 99 ? "99+" : badgeCount}
+                    {visibleBadgeCount > 99 ? "99+" : visibleBadgeCount}
                   </span>
                 )}
               </Link>
