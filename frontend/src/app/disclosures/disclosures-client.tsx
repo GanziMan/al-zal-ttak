@@ -82,9 +82,30 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
   }, [category, days, updateURL]);
 
   const fetchDisclosures = useCallback(async (isPolling = false) => {
+    // 특정 종목 검색: 로그인 여부와 상관없이 public API 사용
+    if (corpCode) {
+      if (!isPolling) {
+        try {
+          const data = await api.getPublicDisclosures({
+            days: 30,
+            category: category === "all" ? undefined : category,
+            min_score: minScore || undefined,
+            corp_code: corpCode,
+          });
+          setDisclosures(data.disclosures);
+          setPendingAnalysis(data.pending_analysis);
+          setError("");
+        } catch {
+          setError("공시 데이터를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.");
+        } finally {
+          setLoading(false);
+        }
+      }
+      return;
+    }
+
     if (!isLoggedIn) {
-      // 특정 종목 조회 시에는 ISR 데이터 대신 API에서 직접 가져오기
-      if (!corpCode && initialDisclosures.length > 0) {
+      if (initialDisclosures.length > 0) {
         if (!isPolling) {
           setDisclosures(initialDisclosures);
           setPendingAnalysis(0);
@@ -96,10 +117,9 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
       if (!isPolling) {
         try {
           const data = await api.getPublicDisclosures({
-            days: corpCode ? 30 : days,
+            days,
             category: category === "all" ? undefined : category,
             min_score: minScore || undefined,
-            corp_code: corpCode || undefined,
           });
           setDisclosures(data.disclosures);
           setPendingAnalysis(data.pending_analysis);
