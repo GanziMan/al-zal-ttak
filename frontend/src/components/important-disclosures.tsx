@@ -5,7 +5,7 @@ import { AlertTriangle, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Disclosure } from "@/lib/api";
-import { categoryColor, categoryDot, categoryLabel, formatDateShort, scoreColor } from "@/lib/disclosure-utils";
+import { categoryColor, categoryDot, categoryLabel, formatDateShort, scoreColor, shouldShowScore } from "@/lib/disclosure-utils";
 import { cn } from "@/lib/utils";
 
 interface ImportantDisclosuresProps {
@@ -58,9 +58,11 @@ export function ImportantDisclosures({ disclosures }: ImportantDisclosuresProps)
                     )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className={cn("text-xs font-bold tabular-nums", scoreColor(score))}>
-                      {score}
-                    </span>
+                    {shouldShowScore(cat) && (
+                      <span className={cn("text-xs font-bold tabular-nums", scoreColor(score))}>
+                        {score}
+                      </span>
+                    )}
                     <Badge variant="outline" className={cn("text-[10px] rounded-md", categoryColor[cat])}>
                       {catLabel}
                     </Badge>

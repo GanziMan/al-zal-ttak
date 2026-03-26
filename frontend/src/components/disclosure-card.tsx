@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { ExternalLink, Bookmark, BookmarkCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { api, Disclosure, SimilarDisclosure } from "@/lib/api";
-import { categoryColor, categoryBorder, categoryDot, categoryLabel, formatDate, scoreColor } from "@/lib/disclosure-utils";
+import { categoryColor, categoryBorder, categoryDot, categoryLabel, formatDate, scoreColor, shouldShowScore } from "@/lib/disclosure-utils";
 import { GlossaryHighlight } from "@/components/glossary-highlight";
 import { PriceImpactBadge } from "@/components/price-impact-badge";
 import { cn } from "@/lib/utils";
@@ -39,6 +39,7 @@ export function DisclosureCard({ disclosure, isBookmarked, onToggleBookmark }: D
   const cat = analysis?.category || "단순정보";
   const score = analysis?.importance_score ?? 0;
   const catLabel = categoryLabel(cat, score);
+  const showScore = shouldShowScore(cat);
 
   return (
     <article
@@ -96,9 +97,11 @@ export function DisclosureCard({ disclosure, isBookmarked, onToggleBookmark }: D
                   </Badge>
                   <PriceImpactBadge rceptNo={disclosure.rcept_no} visible={expanded} />
                 </div>
-                <span className={cn("text-lg font-bold tabular-nums tracking-tighter", scoreColor(score))}>
-                  {score}
-                </span>
+                {showScore && (
+                  <span className={cn("text-lg font-bold tabular-nums tracking-tighter", scoreColor(score))}>
+                    {score}
+                  </span>
+                )}
               </div>
             ) : (
               <div className="flex flex-col items-end gap-1.5">
@@ -150,9 +153,11 @@ export function DisclosureCard({ disclosure, isBookmarked, onToggleBookmark }: D
                               <Badge variant="outline" className={cn("text-[9px] rounded-md px-1 py-0", categoryColor[s.category])}>
                                 {categoryLabel(s.category, s.importance_score)}
                               </Badge>
-                              <span className={cn("text-[10px] font-bold tabular-nums", scoreColor(s.importance_score))}>
-                                {s.importance_score}
-                              </span>
+                              {shouldShowScore(s.category) && (
+                                <span className={cn("text-[10px] font-bold tabular-nums", scoreColor(s.importance_score))}>
+                                  {s.importance_score}
+                                </span>
+                              )}
                               {s.price_change_5d !== null && s.price_change_5d !== undefined && (
                                 <span className={cn(
                                   "text-[9px] font-semibold tabular-nums",

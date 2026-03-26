@@ -5,7 +5,7 @@ import { Sparkles, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import Link from "next/link";
 import { api, getCached, setCache, isFresh, type DailyBriefing as BriefingType } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
-import { categoryColor, categoryLabel } from "@/lib/disclosure-utils";
+import { categoryColor, categoryLabel, shouldShowScore } from "@/lib/disclosure-utils";
 import { cn } from "@/lib/utils";
 
 export function DailyBriefing() {
@@ -48,14 +48,16 @@ export function DailyBriefing() {
             <div className="space-y-1.5 mb-3">
               {data.top_disclosures.map((d, i) => (
                 <div key={i} className="flex items-center gap-2 text-[12px]">
-                  <span
-                    className={cn(
-                      "text-[10px] font-bold tabular-nums w-6 text-center",
-                      d.importance_score >= 70 ? "text-red-500" : d.importance_score >= 40 ? "text-amber-500" : "text-muted-foreground",
-                    )}
-                  >
-                    {d.importance_score}
-                  </span>
+                  {shouldShowScore(d.category) && (
+                    <span
+                      className={cn(
+                        "text-[10px] font-bold tabular-nums w-6 text-center",
+                        d.importance_score >= 70 ? "text-red-500" : d.importance_score >= 40 ? "text-amber-500" : "text-muted-foreground",
+                      )}
+                    >
+                      {d.importance_score}
+                    </span>
+                  )}
                   <Badge
                     variant="outline"
                     className={cn(

@@ -55,3 +55,7 @@ export function categoryLabel(category: string, score: number) {
   }
   return category;
 }
+
+export function shouldShowScore(category: string) {
+  return category !== "단순정보";
+}
