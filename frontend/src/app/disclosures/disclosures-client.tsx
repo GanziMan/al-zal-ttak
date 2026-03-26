@@ -22,6 +22,7 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const corpCode = searchParams.get("corp_code");
+  const corpNameParam = searchParams.get("corp_name");
   const { isLoggedIn } = useAuth();
 
   const [disclosures, setDisclosures] = useState<Disclosure[]>(() => {
@@ -205,7 +206,7 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
   }, [disclosures, days, category, minScore, corpCode, isLoggedIn, filterByDays]);
 
   const corpName = corpCode
-    ? disclosures.find((d) => d.corp_code === corpCode)?.corp_name ?? null
+    ? corpNameParam || disclosures.find((d) => d.corp_code === corpCode)?.corp_name || corpCode
     : null;
 
   const handleRefresh = async () => {
@@ -227,7 +228,7 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
                 &larr; 전체 공시
               </Link>
               <h1 className="text-2xl font-bold tracking-tight mt-1">
-                {corpName ?? corpCode} 공시
+                {corpName} 공시
               </h1>
               <p className="text-[12px] text-muted-foreground mt-0.5">
                 해당 종목의 AI 분석 공시

@@ -61,7 +61,7 @@ export function QuickSearch() {
   }, []);
 
   const handleSelect = (corp: Corp) => {
-    router.push(`/disclosures?corp_code=${corp.corp_code}`);
+    router.push(`/disclosures?corp_code=${corp.corp_code}&corp_name=${encodeURIComponent(corp.corp_name)}`);
     setQuery("");
     setOpen(false);
     setFocused(false);
