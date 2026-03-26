@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/api/", "/auth/", "/settings", "/watchlist"],
       },
     ],
-    sitemap: "https://al-gong-ttak.vercel.app/sitemap.xml",
+    sitemap: "https://gongsittak.com/sitemap.xml",
   };
 }

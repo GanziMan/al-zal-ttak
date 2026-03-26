@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const SITE_URL = "https://al-gong-ttak.vercel.app";
+const SITE_URL = "https://gongsittak.com";
 const SITE_NAME = "공시딱";
 const SITE_TITLE = "공시딱 | 공시, 알아서 공시 딱";
 const SITE_DESC = "DART 공시를 AI가 자동으로 분석하고 호재/악재를 판별해드립니다. 관심종목 추적, 오늘의 브리핑까지.";
@@ -32,7 +32,10 @@ export const metadata: Metadata = {
   keywords: [
     "공시 분석", "DART", "AI 공시", "주식 공시", "호재 악재",
     "한국 주식", "공시 알림", "공시딱", "관심종목", "오늘의 브리핑",
-    "공시 필터링", "투자 정보", "금융 AI",
+    "공시 필터링", "투자 정보", "금융 AI", "전자공시", "실시간 공시",
+    "공시 검색", "주가", "종목 분석", "투자 도구", "기업 공시",
+    "상장사 공시", "증권 정보", "재무제표", "사업보고서", "공시 자동화",
+    "AI 투자", "스마트 투자", "공시 요약", "중요 공시", "공시 트렌드",
   ],
   authors: [{ name: SITE_NAME }],
   creator: SITE_NAME,
@@ -73,7 +76,7 @@ export const metadata: Metadata = {
   },
   other: {
     "mobile-web-app-capable": "yes",
-    "naver-site-verification": "d9d666d229324a6e08e076c55e9303c90a1e0b5e",
+    "naver-site-verification": "fd9a533d851bb35c179ef005048d3c350f6bb64b",
   },
 };
 
@@ -106,7 +109,7 @@ export default function RootLayout({
               "@type": "WebApplication",
               name: "공시딱",
               alternateName: "GONGSITTAK",
-              url: "https://al-gong-ttak.vercel.app",
+              url: "https://gongsittak.com",
               description: "DART 공시를 AI가 자동으로 분석하고 호재/악재를 판별해드립니다.",
               applicationCategory: "FinanceApplication",
               operatingSystem: "Web",
