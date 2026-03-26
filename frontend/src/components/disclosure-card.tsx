@@ -44,9 +44,11 @@ export function DisclosureCard({ disclosure, isBookmarked, onToggleBookmark }: D
   return (
     <article
       className={cn(
-        "glass-card rounded-2xl border-l-[3px] transition-all hover:shadow-md",
+        "glass-card rounded-2xl border-l-[3px] transition-all hover:shadow-md focus-within:ring-2 focus-within:ring-primary/50",
         categoryBorder[cat] || "border-l-zinc-300"
       )}
+      role="article"
+      aria-label={`${disclosure.corp_name} - ${disclosure.report_nm}`}
     >
       <div className="px-4 py-3.5">
         {/* Header row */}
@@ -137,9 +139,9 @@ export function DisclosureCard({ disclosure, isBookmarked, onToggleBookmark }: D
                     유사 공시
                   </p>
                   {similar === null ? (
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full border-2 border-muted-foreground/30 border-t-primary animate-spin" />
-                      <span className="text-[11px] text-muted-foreground/50">검색 중...</span>
+                    <div className="space-y-2">
+                      <div className="h-3 w-full bg-muted rounded animate-pulse" />
+                      <div className="h-3 w-2/3 bg-muted rounded animate-pulse" />
                     </div>
                   ) : similar.length === 0 ? (
                     <p className="text-[11px] text-muted-foreground/50">유사한 공시가 없습니다</p>
@@ -200,16 +202,24 @@ export function DisclosureCard({ disclosure, isBookmarked, onToggleBookmark }: D
             )}
 
             <button
-              className="mt-2.5 min-h-[44px] w-full flex items-center justify-center gap-1 text-[11px] font-semibold text-primary/70 hover:text-primary hover:bg-primary/5 active:scale-98 rounded-lg transition-all touch-manipulation"
+              className="mt-2.5 min-h-[44px] w-full flex items-center justify-center gap-1 text-[11px] font-semibold text-primary/70 hover:text-primary hover:bg-primary/5 active:scale-98 rounded-lg transition-all touch-manipulation focus:outline-none focus:ring-2 focus:ring-primary/50"
               onClick={() => setExpanded(!expanded)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setExpanded(!expanded);
+                }
+              }}
+              aria-expanded={expanded}
+              aria-label={expanded ? "분석 숨기기" : "분석 보기"}
             >
               <span>{expanded ? "분석 숨기기 ▲" : "분석 보기 ▼"}</span>
             </button>
           </div>
         ) : (
-          <div className="mt-2.5 flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full border-2 border-muted-foreground/30 border-t-primary animate-spin" />
-            <span className="text-[11px] text-muted-foreground/50">분석 중...</span>
+          <div className="mt-2.5 space-y-2">
+            <div className="h-4 w-full bg-muted rounded animate-pulse" />
+            <div className="h-4 w-3/4 bg-muted rounded animate-pulse" />
           </div>
         )}
       </div>

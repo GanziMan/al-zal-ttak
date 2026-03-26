@@ -9,6 +9,8 @@ import { DisclosureCard } from "@/components/disclosure-card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PullToRefresh } from "@/components/pull-to-refresh";
+import { EmptyState } from "@/components/empty-state";
+import { FileText, Star } from "lucide-react";
 import { api, fetchWithRevalidate, getCached, Bookmark, Disclosure } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
 
@@ -270,21 +272,21 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
             <Skeleton key={i} className="h-28 rounded-2xl" />
           ))
         ) : filtered.length === 0 ? (
-          <div className="glass-card rounded-2xl border-dashed py-16 text-center">
-            <p className="text-sm text-muted-foreground">
-              {corpCode ? "해당 종목의 공시가 없습니다" : "공시가 없습니다"}
-            </p>
-            <p className="mt-1.5 text-[11px] text-muted-foreground/60">
-              {corpCode
+          <EmptyState
+            icon={corpCode ? FileText : (isLoggedIn ? Star : FileText)}
+            title={corpCode ? "해당 종목의 공시가 없습니다" : "공시가 없습니다"}
+            description={
+              corpCode
                 ? "기간이나 필터를 조정해 보세요"
-                : isLoggedIn ? "관심종목을 추가하거나 필터를 조정하세요" : "필터를 조정하거나 나중에 다시 시도해 보세요"}
-            </p>
-            {!corpCode && isLoggedIn && (
-              <Link href="/watchlist" className="mt-3 inline-block">
-                <Button variant="outline" size="sm">관심종목 추가하기</Button>
-              </Link>
-            )}
-          </div>
+                : isLoggedIn
+                  ? "관심종목을 추가하거나 필터를 조정하세요"
+                  : "필터를 조정하거나 나중에 다시 시도해 보세요"
+            }
+            action={!corpCode && isLoggedIn ? {
+              label: "관심종목 추가하기",
+              onClick: () => window.location.href = "/watchlist"
+            } : undefined}
+          />
         ) : (
           filtered.map((d) => (
             <DisclosureCard

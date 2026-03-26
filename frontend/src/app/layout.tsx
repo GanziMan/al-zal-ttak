@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import { Nav } from "@/components/nav";
 import { AuthProvider } from "@/components/auth-provider";
 import { SwRegister } from "@/components/sw-register";
+import { OfflineBanner } from "@/components/offline-banner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -170,6 +171,7 @@ export default function RootLayout({
         <SwRegister />
         <AuthProvider>
           <Nav />
+          <OfflineBanner />
           <Toaster
             position="top-center"
             toastOptions={{

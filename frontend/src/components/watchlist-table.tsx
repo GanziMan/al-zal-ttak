@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Trash2 } from "lucide-react";
+import { Trash2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/empty-state";
 import { WatchlistItem } from "@/lib/api";
 
 interface WatchlistTableProps {
@@ -13,12 +14,11 @@ interface WatchlistTableProps {
 export function WatchlistTable({ items, onRemove }: WatchlistTableProps) {
   if (items.length === 0) {
     return (
-      <div className="glass-card rounded-2xl border-dashed py-16 text-center">
-        <p className="text-sm text-muted-foreground">관심종목이 없습니다</p>
-        <p className="mt-1.5 text-[11px] text-muted-foreground/60">
-          위에서 종목을 검색하여 추가하세요
-        </p>
-      </div>
+      <EmptyState
+        icon={Star}
+        title="관심종목이 없습니다"
+        description="위에서 종목을 검색하여 추가하세요"
+      />
     );
   }
 
