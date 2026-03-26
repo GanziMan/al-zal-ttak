@@ -48,7 +48,7 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
   const retryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryCountRef = useRef(0);
   const prevPendingRef = useRef(0);
-  const bookmarkOps = useRef(0);
+  const bookmarkQueueRef = useRef<Promise<void>>(Promise.resolve());
 
   const toErrorMessage = useCallback((err: unknown, fallback: string) => {
     if (err instanceof ApiError) {
@@ -261,7 +261,7 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
     return undefined;
   }, [pendingAnalysis, fetchDisclosures, isLoggedIn]);
 
-  const handleToggleBookmark = useCallback(async (disc: Disclosure) => {
+  const handleToggleBookmark = useCallback((disc: Disclosure, isBookmarkedNow: boolean) => {
     if (!isLoggedIn) {
       toast("로그인하면 북마크를 저장할 수 있어요", {
         action: {
@@ -272,10 +272,7 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
       return;
     }
 
-    const current = bookmarksRef.current;
-    const exists = current.some((b) => b.rcept_no === disc.rcept_no);
-
-    if (exists) {
+    if (isBookmarkedNow) {
       setBookmarks((prev) => prev.filter((b) => b.rcept_no !== disc.rcept_no));
     } else {
       setBookmarks((prev) => [
@@ -290,23 +287,26 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
       ]);
     }
 
-    bookmarkOps.current++;
-    try {
-      const res = exists
-        ? await api.removeBookmark(disc.rcept_no)
-        : await api.addBookmark({
-            rcept_no: disc.rcept_no,
-            corp_name: disc.corp_name,
-            report_nm: disc.report_nm,
-          });
-      bookmarkOps.current--;
-      if (bookmarkOps.current === 0) {
+    bookmarkQueueRef.current = bookmarkQueueRef.current
+      .then(async () => {
+        const res = isBookmarkedNow
+          ? await api.removeBookmark(disc.rcept_no)
+          : await api.addBookmark({
+              rcept_no: disc.rcept_no,
+              corp_name: disc.corp_name,
+              report_nm: disc.report_nm,
+            });
         setBookmarks(res.bookmarks);
-      }
-    } catch {
-      bookmarkOps.current--;
-      toast.error(exists ? "북마크 해제 실패" : "북마크 추가 실패");
-    }
+      })
+      .catch(async () => {
+        toast.error(isBookmarkedNow ? "북마크 해제 실패" : "북마크 추가 실패");
+        try {
+          const latest = await api.getBookmarks();
+          setBookmarks(latest.bookmarks);
+        } catch {
+          // silent
+        }
+      });
   }, [isLoggedIn]);
 
   // 비로그인: 클라이언트 사이드 필터링 (날짜/카테고리/점수)
@@ -468,14 +468,17 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
             } : undefined}
           />
         ) : (
-          filtered.map((d) => (
-            <DisclosureCard
-              key={d.rcept_no}
-              disclosure={d}
-              isBookmarked={bookmarks.some((b) => b.rcept_no === d.rcept_no)}
-              onToggleBookmark={handleToggleBookmark}
-            />
-          ))
+          filtered.map((d) => {
+            const isBookmarked = bookmarks.some((b) => b.rcept_no === d.rcept_no);
+            return (
+              <DisclosureCard
+                key={d.rcept_no}
+                disclosure={d}
+                isBookmarked={isBookmarked}
+                onToggleBookmark={(disc) => handleToggleBookmark(disc, isBookmarked)}
+              />
+            );
+          })
         )}
       </div>
 

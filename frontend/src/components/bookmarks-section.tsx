@@ -7,14 +7,19 @@ import { api, fetchWithRevalidate, Bookmark as BookmarkType } from "@/lib/api";
 export function BookmarksSection() {
   const [bookmarks, setBookmarks] = useState<BookmarkType[]>([]);
   const [loading, setLoading] = useState(true);
-  const pendingOps = useRef(0);
+  const bookmarkQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const removingSetRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     fetchWithRevalidate<{ bookmarks: BookmarkType[] }>(
       "/api/bookmarks",
-      (fresh) => { if (pendingOps.current === 0) setBookmarks(fresh.bookmarks); },
+      (fresh) => {
+        if (removingSetRef.current.size === 0) setBookmarks(fresh.bookmarks);
+      },
     )
-      .then((cached) => { if (cached) setBookmarks(cached.bookmarks); })
+      .then((cached) => {
+        if (cached && removingSetRef.current.size === 0) setBookmarks(cached.bookmarks);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -25,16 +30,28 @@ export function BookmarksSection() {
   }
 
   async function handleRemove(rceptNo: string) {
+    if (removingSetRef.current.has(rceptNo)) return;
+    removingSetRef.current.add(rceptNo);
     setBookmarks((prev) => prev.filter((b) => b.rcept_no !== rceptNo));
-    pendingOps.current++;
-    try {
-      const res = await api.removeBookmark(rceptNo);
-      pendingOps.current--;
-      if (pendingOps.current === 0) setBookmarks(res.bookmarks);
-    } catch {
-      pendingOps.current--;
-      setBookmarks((prev) => prev);
-    }
+
+    bookmarkQueueRef.current = bookmarkQueueRef.current
+      .then(async () => {
+        const res = await api.removeBookmark(rceptNo);
+        setBookmarks(res.bookmarks);
+      })
+      .catch(async () => {
+        try {
+          const latest = await api.getBookmarks();
+          setBookmarks(latest.bookmarks);
+        } catch {
+          // Keep optimistic UI if hard refresh also fails.
+        }
+      })
+      .finally(() => {
+        removingSetRef.current.delete(rceptNo);
+      });
+
+    await bookmarkQueueRef.current;
   }
 
   return (
