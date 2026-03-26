@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
+import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { Nav } from "@/components/nav";
@@ -190,9 +191,20 @@ export default function RootLayout({
             </p>
           </div>
           <footer className="hidden sm:block border-t border-border py-4 text-center">
-            <p className="text-[11px] text-muted-foreground/50">
-              공시딱 &middot; AI 공시 분석 &middot; DART 기반
-            </p>
+            <div className="space-y-1">
+              <p className="text-[11px] text-muted-foreground/50">
+                공시딱 &middot; AI 공시 분석 &middot; DART 기반
+              </p>
+              <p className="text-[11px] text-muted-foreground/60">
+                <Link href="/privacy" className="hover:text-foreground transition-colors">
+                  개인정보처리방침
+                </Link>
+                {" · "}
+                <Link href="/terms" className="hover:text-foreground transition-colors">
+                  이용약관
+                </Link>
+              </p>
+            </div>
           </footer>
         </AuthProvider>
       </body>
