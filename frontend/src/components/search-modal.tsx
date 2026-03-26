@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { api, Corp } from "@/lib/api";
-import { cn } from "@/lib/utils";
 
 interface SearchModalProps {
   open: boolean;
@@ -20,6 +19,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
   const [results, setResults] = useState<Corp[]>([]);
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const normalizedQuery = query.trim().replace(/\s+/g, " ");
 
   useEffect(() => {
     if (open) {
@@ -38,12 +38,12 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
   }, [open]);
 
   useEffect(() => {
-    if (query.length < 1) {
+    if (normalizedQuery.length < 1) {
       setResults([]);
       return;
     }
 
-    const cached = searchCache.get(query);
+    const cached = searchCache.get(normalizedQuery);
     if (cached) {
       setResults(cached);
       return;
@@ -52,8 +52,8 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
-        const data = await api.searchCorps(query);
-        searchCache.set(query, data.results);
+        const data = await api.searchCorps(normalizedQuery);
+        searchCache.set(normalizedQuery, data.results);
         setResults(data.results);
       } catch {
         setResults([]);
@@ -63,7 +63,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [normalizedQuery]);
 
   const handleSelect = (corp: Corp) => {
     router.push(`/disclosures?corp_code=${corp.corp_code}&corp_name=${encodeURIComponent(corp.corp_name)}`);
@@ -129,7 +129,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
           <div className="flex flex-col items-center justify-center py-12">
             <Search className="h-12 w-12 text-muted-foreground/30 mb-3" />
             <p className="text-sm text-muted-foreground">
-              "{query}" 검색 결과가 없습니다
+              &quot;{query}&quot; 검색 결과가 없습니다
             </p>
             <p className="text-xs text-muted-foreground/60 mt-1">
               다른 검색어를 입력해보세요

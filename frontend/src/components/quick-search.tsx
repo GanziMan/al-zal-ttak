@@ -17,15 +17,16 @@ export function QuickSearch() {
   const [loading, setLoading] = useState(false);
   const [focused, setFocused] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const normalizedQuery = query.trim().replace(/\s+/g, " ");
 
   useEffect(() => {
-    if (query.length < 1) {
+    if (normalizedQuery.length < 1) {
       setResults([]);
       setOpen(false);
       return;
     }
 
-    const cached = searchCache.get(query);
+    const cached = searchCache.get(normalizedQuery);
     if (cached) {
       setResults(cached);
       setOpen(cached.length > 0);
@@ -35,8 +36,8 @@ export function QuickSearch() {
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
-        const data = await api.searchCorps(query);
-        searchCache.set(query, data.results);
+        const data = await api.searchCorps(normalizedQuery);
+        searchCache.set(normalizedQuery, data.results);
         setResults(data.results);
         setOpen(data.results.length > 0);
       } catch {
@@ -47,7 +48,7 @@ export function QuickSearch() {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [normalizedQuery]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {

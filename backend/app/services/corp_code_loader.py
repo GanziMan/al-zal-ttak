@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import io
 import logging
+import time
 import zipfile
 import xml.etree.ElementTree as ET
 from typing import List, Dict
@@ -22,14 +23,24 @@ BATCH_SIZE = 500
 # 인메모리 캐시 — 서버 시작 시 로드, 검색 시 DB 접근 불필요
 _corps_cache: List[Dict] = []
 _corps_by_name: Dict[str, Dict] = {}
+_prefix_buckets: Dict[str, List[Dict]] = {}
+_search_cache: Dict[str, tuple[List[Dict], float]] = {}
+_SEARCH_CACHE_TTL = 60  # seconds
 
 
 def _rebuild_corp_maps() -> None:
     _corps_by_name.clear()
+    _prefix_buckets.clear()
+    _search_cache.clear()
     for corp in _corps_cache:
         name = corp.get("corp_name", "")
         if name:
             _corps_by_name[name] = corp
+            key = name.lower().strip()
+            if key:
+                _prefix_buckets.setdefault(key[:1], []).append(corp)
+                if len(key) >= 2:
+                    _prefix_buckets.setdefault(key[:2], []).append(corp)
 
 
 def get_corp_by_name(corp_name: str) -> Dict | None:
@@ -102,21 +113,93 @@ async def load_cached_corps() -> List[Dict]:
 
 
 async def search_corps(keyword: str) -> List[Dict]:
-    """기업명으로 검색 (인메모리, DB 접근 없음)"""
+    """기업명/종목코드 검색 (인메모리, DB 접근 없음)"""
     if not _corps_cache:
         await load_cached_corps()
 
-    kw = keyword.lower()
-    # 접두사 매치 우선, 그 다음 포함 매치
-    prefix = []
-    contains = []
-    for c in _corps_cache:
-        name_lower = c["corp_name"].lower()
-        if name_lower.startswith(kw):
-            prefix.append(c)
-        elif kw in name_lower:
-            contains.append(c)
-        if len(prefix) + len(contains) >= 20:
-            break
+    normalized = " ".join(keyword.strip().lower().split())
+    if not normalized:
+        return []
 
-    return (prefix + contains)[:20]
+    now = time.time()
+    cached = _search_cache.get(normalized)
+    if cached and now - cached[1] < _SEARCH_CACHE_TTL:
+        return cached[0]
+
+    tokens = [t for t in normalized.split(" ") if t]
+    if not tokens:
+        return []
+
+    # prefix 버킷으로 후보군 축소
+    candidate_map: Dict[str, Dict] = {}
+    for t in tokens:
+        bucket_key = t[:2] if len(t) >= 2 else t[:1]
+        for corp in _prefix_buckets.get(bucket_key, []):
+            candidate_map[corp["corp_code"]] = corp
+
+    candidates = list(candidate_map.values()) if candidate_map else _corps_cache
+
+    # 다중 키워드 입력(예: "현대자동차 한국콜마")도 결과가 나오도록 토큰 OR 매칭
+    scored: list[tuple[int, Dict]] = []
+    for c in candidates:
+        name_lower = c["corp_name"].lower()
+        stock_code = c.get("stock_code", "").lower()
+        score = 0
+
+        # 전체 질의가 기업명에 정확히 들어가면 최우선
+        if name_lower.startswith(normalized):
+            score += 120
+        elif normalized in name_lower:
+            score += 90
+
+        matched_any = False
+        for t in tokens:
+            if name_lower.startswith(t):
+                score += 35
+                matched_any = True
+            elif t in name_lower:
+                score += 20
+                matched_any = True
+            elif stock_code and t in stock_code:
+                score += 25
+                matched_any = True
+
+        if matched_any:
+            # 너무 짧은 이름 보정
+            score += max(0, 10 - min(len(name_lower), 10))
+            scored.append((score, c))
+
+    # 버킷 축소로 누락될 수 있는 경우 full-scan 폴백
+    if len(scored) < 5 and candidates is not _corps_cache:
+        seen = {c["corp_code"] for _, c in scored}
+        for c in _corps_cache:
+            if c["corp_code"] in seen:
+                continue
+            name_lower = c["corp_name"].lower()
+            stock_code = c.get("stock_code", "").lower()
+            score = 0
+            if name_lower.startswith(normalized):
+                score += 120
+            elif normalized in name_lower:
+                score += 90
+
+            matched_any = False
+            for t in tokens:
+                if name_lower.startswith(t):
+                    score += 35
+                    matched_any = True
+                elif t in name_lower:
+                    score += 20
+                    matched_any = True
+                elif stock_code and t in stock_code:
+                    score += 25
+                    matched_any = True
+
+            if matched_any:
+                score += max(0, 10 - min(len(name_lower), 10))
+                scored.append((score, c))
+
+    scored.sort(key=lambda x: (-x[0], x[1]["corp_name"]))
+    results = [c for _, c in scored[:20]]
+    _search_cache[normalized] = (results, now)
+    return results
