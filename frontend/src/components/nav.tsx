@@ -11,11 +11,13 @@ import {
   Star,
   Settings,
   LogIn,
+  Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
 import { QuickSearch } from "@/components/quick-search";
+import { SearchModal } from "@/components/search-modal";
 
 const guestLinks = [
   { href: "/", label: "홈" },
@@ -51,6 +53,7 @@ export function Nav() {
       : false
   );
   const [badgeCount, setBadgeCount] = useState(0);
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
   const lastFetchRef = useRef(0);
 
   const activeLinks = isLoggedIn ? authLinks : guestLinks;
@@ -144,10 +147,18 @@ export function Nav() {
             </nav>
           </div>
           <div className="flex items-center gap-2.5">
-            {/* 빠른 검색 */}
+            {/* 빠른 검색 - 데스크톱 */}
             <div className="hidden sm:block">
               <QuickSearch />
             </div>
+            {/* 검색 아이콘 - 모바일 */}
+            <button
+              onClick={() => setSearchModalOpen(true)}
+              className="flex sm:hidden items-center justify-center h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent transition-colors touch-manipulation"
+              aria-label="검색"
+            >
+              <Search className="h-4 w-4" />
+            </button>
             {isLoggedIn ? (
               <div className="hidden sm:flex items-center gap-2">
                 <span className="text-[12px] font-medium text-foreground">
@@ -224,6 +235,9 @@ export function Nav() {
           })}
         </div>
       </nav>
+
+      {/* 모바일 검색 모달 */}
+      <SearchModal open={searchModalOpen} onClose={() => setSearchModalOpen(false)} />
     </>
   );
 }
