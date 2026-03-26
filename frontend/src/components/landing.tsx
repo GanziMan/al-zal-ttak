@@ -13,8 +13,6 @@ import { api, DashboardSummary, Disclosure } from "@/lib/api";
 import { DisclosureCard } from "@/components/disclosure-card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 const features = [
   {
     icon: BrainCircuit,
