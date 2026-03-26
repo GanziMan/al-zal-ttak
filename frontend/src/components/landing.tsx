@@ -65,6 +65,7 @@ export function Landing({
   const hasServerData =
     initialSummary != null ||
     (initialDisclosures && initialDisclosures.length > 0);
+  const shouldRefetch = initialSummary == null;
   const [summary, setSummary] = useState<DashboardSummary | null>(
     initialSummary ?? null,
   );
@@ -73,9 +74,9 @@ export function Landing({
   );
   const [loading, setLoading] = useState(!hasServerData);
 
-  // 서버 데이터 없으면 클라이언트 fetch
+  // summary가 없으면 클라이언트에서 반드시 재조회 (서버 fetch 부분 실패 복구)
   useEffect(() => {
-    if (hasServerData) return;
+    if (!shouldRefetch) return;
     async function load() {
       try {
         const [dashData, discData] = await Promise.all([
@@ -100,7 +101,7 @@ export function Landing({
       }
     }
     load();
-  }, [hasServerData]);
+  }, [shouldRefetch]);
 
   // 미분석 공시가 있으면 5초 간격 폴링으로 분석 완료 반영
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -190,7 +191,7 @@ export function Landing({
             최근 3일 공시
           </p>
           <p className="text-2xl font-black text-foreground mt-1">
-            {summary?.today_disclosures ?? "-"}
+            {summary ? summary.today_disclosures : "…"}
           </p>
           <p className="text-[10px] text-muted-foreground/60 mt-0.5">건</p>
         </Link>
@@ -203,7 +204,7 @@ export function Landing({
           className="glass-card rounded-2xl p-4 text-center transition-colors hover:bg-accent/40">
           <p className="text-[10px] font-medium text-muted-foreground">호재</p>
           <p className="text-2xl font-black text-emerald-500 mt-1">
-            {summary?.bullish ?? "-"}
+            {summary ? summary.bullish : "…"}
           </p>
           <p className="text-[10px] text-muted-foreground/60 mt-0.5">건</p>
         </Link>
@@ -216,7 +217,7 @@ export function Landing({
           className="glass-card rounded-2xl p-4 text-center transition-colors hover:bg-accent/40">
           <p className="text-[10px] font-medium text-muted-foreground">악재</p>
           <p className="text-2xl font-black text-red-500 mt-1">
-            {summary?.bearish ?? "-"}
+            {summary ? summary.bearish : "…"}
           </p>
           <p className="text-[10px] text-muted-foreground/60 mt-0.5">건</p>
         </Link>
