@@ -20,6 +20,14 @@ export default function LoginPage() {
     });
   };
 
+  if (isLoading || isLoggedIn) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-[60vh] items-center justify-center">
       <div className="w-full max-w-sm space-y-8 text-center">

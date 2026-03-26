@@ -6,13 +6,13 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { DisclosureFilters } from "@/components/disclosure-filters";
 import { DisclosureCard } from "@/components/disclosure-card";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PullToRefresh } from "@/components/pull-to-refresh";
 import { EmptyState } from "@/components/empty-state";
 import { FileText, Star } from "lucide-react";
 import { api, fetchWithRevalidate, getCached, Bookmark, Disclosure } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
+import { cn } from "@/lib/utils";
 
 interface DisclosuresClientProps {
   initialDisclosures: Disclosure[];
@@ -39,10 +39,17 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
   const [days, setDays] = useState(Number(searchParams.get("days")) || 7);
   const [minScore, setMinScore] = useState(Number(searchParams.get("min_score")) || 0);
   const [pendingAnalysis, setPendingAnalysis] = useState(0);
+  const [filtering, setFiltering] = useState(false);
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const bookmarksRef = useRef<Bookmark[]>([]);
+  const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pollDelayRef = useRef(5000);
   const prevPendingRef = useRef(0);
   const bookmarkOps = useRef(0);
+
+  useEffect(() => {
+    bookmarksRef.current = bookmarks;
+  }, [bookmarks]);
 
   // 비로그인: ISR 데이터를 날짜로 필터링 (KST 기준)
   const filterByDays = useCallback((data: Disclosure[], d: number) => {
@@ -85,6 +92,7 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
     // 특정 종목 검색: 로그인 여부와 상관없이 public API 사용
     if (corpCode) {
       if (!isPolling) {
+        setFiltering(true);
         try {
           const data = await api.getPublicDisclosures({
             days: 30,
@@ -99,6 +107,7 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
           setError("공시 데이터를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.");
         } finally {
           setLoading(false);
+          setFiltering(false);
         }
       }
       return;
@@ -134,6 +143,7 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
     }
 
     if (!isPolling) {
+      setFiltering(true);
       const sp = new URLSearchParams();
       if (days !== 7) sp.set("days", String(days));
       if (category !== "all") sp.set("category", category);
@@ -159,6 +169,7 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
         setError("공시 데이터를 불러올 수 없습니다. 백엔드 서버를 확인하세요.");
       } finally {
         setLoading(false);
+        setFiltering(false);
       }
     } else {
       try {
@@ -198,15 +209,81 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
   // 미분석 건이 있으면 5초 간격으로 자동 폴링 (로그인 시에만)
   useEffect(() => {
     if (pendingAnalysis > 0 && isLoggedIn) {
-      pollRef.current = setInterval(() => fetchDisclosures(true), 5000);
+      let cancelled = false;
+      pollDelayRef.current = 5000;
+
+      const tick = async () => {
+        await fetchDisclosures(true);
+        if (cancelled) return;
+        const hidden = document.visibilityState !== "visible";
+        const nextDelay = hidden
+          ? Math.max(pollDelayRef.current, 20000)
+          : Math.min(Math.round(pollDelayRef.current * 1.5), 30000);
+        pollDelayRef.current = nextDelay;
+        pollRef.current = setTimeout(tick, nextDelay);
+      };
+
+      pollRef.current = setTimeout(tick, pollDelayRef.current);
+
+      return () => {
+        cancelled = true;
+        if (pollRef.current) {
+          clearTimeout(pollRef.current);
+          pollRef.current = null;
+        }
+      };
     }
-    return () => {
-      if (pollRef.current) {
-        clearInterval(pollRef.current);
-        pollRef.current = null;
-      }
-    };
+
+    return undefined;
   }, [pendingAnalysis, fetchDisclosures, isLoggedIn]);
+
+  const handleToggleBookmark = useCallback(async (disc: Disclosure) => {
+    if (!isLoggedIn) {
+      toast("로그인하면 북마크를 저장할 수 있어요", {
+        action: {
+          label: "로그인",
+          onClick: () => { window.location.href = "/login"; },
+        },
+      });
+      return;
+    }
+
+    const current = bookmarksRef.current;
+    const exists = current.some((b) => b.rcept_no === disc.rcept_no);
+
+    if (exists) {
+      setBookmarks((prev) => prev.filter((b) => b.rcept_no !== disc.rcept_no));
+    } else {
+      setBookmarks((prev) => [
+        ...prev,
+        {
+          rcept_no: disc.rcept_no,
+          corp_name: disc.corp_name,
+          report_nm: disc.report_nm,
+          memo: "",
+          created_at: "",
+        },
+      ]);
+    }
+
+    bookmarkOps.current++;
+    try {
+      const res = exists
+        ? await api.removeBookmark(disc.rcept_no)
+        : await api.addBookmark({
+            rcept_no: disc.rcept_no,
+            corp_name: disc.corp_name,
+            report_nm: disc.report_nm,
+          });
+      bookmarkOps.current--;
+      if (bookmarkOps.current === 0) {
+        setBookmarks(res.bookmarks);
+      }
+    } catch {
+      bookmarkOps.current--;
+      toast.error(exists ? "북마크 해제 실패" : "북마크 추가 실패");
+    }
+  }, [isLoggedIn]);
 
   // 비로그인: 클라이언트 사이드 필터링 (날짜/카테고리/점수)
   const filtered = useMemo(() => {
@@ -291,7 +368,7 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
         </div>
       )}
 
-      <div className="space-y-3">
+      <div className={cn("space-y-3 transition-opacity duration-200", filtering && "opacity-50 pointer-events-none")}>
         {loading ? (
           Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-28 rounded-2xl" />
@@ -318,38 +395,7 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
               key={d.rcept_no}
               disclosure={d}
               isBookmarked={bookmarks.some((b) => b.rcept_no === d.rcept_no)}
-              onToggleBookmark={async (disc) => {
-                if (!isLoggedIn) {
-                  toast("로그인하면 북마크를 저장할 수 있어요", {
-                    action: {
-                      label: "로그인",
-                      onClick: () => { window.location.href = "/login"; },
-                    },
-                  });
-                  return;
-                }
-                const exists = bookmarks.some((b) => b.rcept_no === disc.rcept_no);
-                if (exists) {
-                  setBookmarks((prev) => prev.filter((b) => b.rcept_no !== disc.rcept_no));
-                } else {
-                  setBookmarks((prev) => [...prev, { rcept_no: disc.rcept_no, corp_name: disc.corp_name, report_nm: disc.report_nm, memo: "", created_at: "" }]);
-                }
-                bookmarkOps.current++;
-                try {
-                  const res = exists
-                    ? await api.removeBookmark(disc.rcept_no)
-                    : await api.addBookmark({
-                        rcept_no: disc.rcept_no,
-                        corp_name: disc.corp_name,
-                        report_nm: disc.report_nm,
-                      });
-                  bookmarkOps.current--;
-                  if (bookmarkOps.current === 0) setBookmarks(res.bookmarks);
-                } catch {
-                  bookmarkOps.current--;
-                  toast.error(exists ? "북마크 해제 실패" : "북마크 추가 실패");
-                }
-              }}
+              onToggleBookmark={handleToggleBookmark}
             />
           ))
         )}

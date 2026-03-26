@@ -197,12 +197,6 @@ export const api = {
     return request<{ history: HistoryDataPoint[] }>(`/api/dashboard/history${qs}`);
   },
 
-  // 유사 공시
-  getSimilarDisclosures: (rceptNo: string, limit?: number) => {
-    const qs = limit ? `?limit=${limit}` : "";
-    return request<{ similar: SimilarDisclosure[]; avg_price_change: number | null }>(`/api/disclosures/${rceptNo}/similar${qs}`);
-  },
-
   // 주가
   getStockPrices: (corpCode: string, days?: number) => {
     const qs = days ? `?days=${days}` : "";
@@ -307,17 +301,6 @@ export interface HistoryDataPoint {
   avg_score: number;
   bullish: number;
   bearish: number;
-}
-
-export interface SimilarDisclosure {
-  rcept_no: string;
-  corp_name: string;
-  report_nm: string;
-  rcept_dt: string;
-  category: string;
-  importance_score: number;
-  summary: string;
-  price_change_5d: number | null;
 }
 
 // 기업 재무 데이터

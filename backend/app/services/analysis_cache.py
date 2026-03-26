@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import asyncio
 
 from sqlalchemy import select, cast, String
 from app.database import async_session
@@ -131,12 +132,11 @@ async def search_similar_with_impact(
     for c in _corps_cache:
         name_map[c["corp_name"]] = c
 
-    changes = []
-    for r in results:
+    async def _enrich_price_change(r: dict) -> float | None:
         corp_info = name_map.get(r["corp_name"])
         if not corp_info or not r.get("rcept_dt"):
             r["price_change_5d"] = None
-            continue
+            return None
         try:
             impact = await calculate_price_impact(
                 corp_info["stock_code"],
@@ -145,12 +145,15 @@ async def search_similar_with_impact(
             )
             if impact and impact.get("change_5d") is not None:
                 r["price_change_5d"] = impact["change_5d"]
-                changes.append(impact["change_5d"])
+                return impact["change_5d"]
             else:
                 r["price_change_5d"] = None
         except Exception:
             logger.warning("Price impact failed for %s", r.get("rcept_no"))
             r["price_change_5d"] = None
+        return None
+
+    changes = [c for c in await asyncio.gather(*[_enrich_price_change(r) for r in results]) if c is not None]
 
     avg_price_change = round(sum(changes) / len(changes), 2) if changes else None
     return results, avg_price_change

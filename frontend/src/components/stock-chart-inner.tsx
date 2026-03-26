@@ -16,6 +16,7 @@ interface StockChartInnerProps {
 
 export default function StockChartInner({ prices }: StockChartInnerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const resizeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 192 });
 
   useEffect(() => {
@@ -28,14 +29,24 @@ export default function StockChartInner({ prices }: StockChartInnerProps) {
       }
     };
 
-    updateSize();
-    window.addEventListener('resize', updateSize);
-    return () => window.removeEventListener('resize', updateSize);
-  }, []);
+    const throttledUpdate = () => {
+      if (resizeTimerRef.current) return;
+      resizeTimerRef.current = setTimeout(() => {
+        updateSize();
+        resizeTimerRef.current = null;
+      }, 120);
+    };
 
-  console.log("📊 Stock chart data:", prices);
-  console.log("📊 Sample:", prices[0]);
-  console.log("📊 Container width:", dimensions.width);
+    updateSize();
+    window.addEventListener("resize", throttledUpdate);
+    return () => {
+      window.removeEventListener("resize", throttledUpdate);
+      if (resizeTimerRef.current) {
+        clearTimeout(resizeTimerRef.current);
+        resizeTimerRef.current = null;
+      }
+    };
+  }, []);
 
   if (!prices || prices.length === 0) {
     return (
@@ -54,8 +65,6 @@ export default function StockChartInner({ prices }: StockChartInnerProps) {
   const minClose = Math.min(...closeValues);
   const maxClose = Math.max(...closeValues);
   const padding = (maxClose - minClose) * 0.1 || 100;
-
-  console.log("📊 Will render chart:", dimensions.width > 0, "width:", dimensions.width);
 
   return (
     <div ref={containerRef} className="h-48 w-full">

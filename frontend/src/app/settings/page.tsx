@@ -121,7 +121,7 @@ export default function SettingsPage() {
             알림 필터
           </h2>
         </div>
-        <div className="p-4 space-y-5">
+        <fieldset disabled={saving} className="p-4 space-y-5">
           <div className="space-y-2">
             <Label className="text-[11px] text-muted-foreground">알림 카테고리</Label>
             <div className="flex flex-wrap gap-2">
@@ -135,7 +135,8 @@ export default function SettingsPage() {
                       "cursor-pointer transition-all text-[11px] rounded-lg",
                       active
                         ? "bg-primary/10 text-primary border-primary/30 hover:bg-primary/15"
-                        : "text-muted-foreground border-border hover:border-muted-foreground/30 hover:text-foreground"
+                        : "text-muted-foreground border-border hover:border-muted-foreground/30 hover:text-foreground",
+                      saving && "opacity-50 pointer-events-none"
                     )}
                     onClick={() => toggleCategory(cat)}
                   >
@@ -187,7 +188,7 @@ export default function SettingsPage() {
               </SelectContent>
             </Select>
           </div>
-        </div>
+        </fieldset>
       </div>
 
       {error && (

@@ -21,6 +21,21 @@ BATCH_SIZE = 500
 
 # 인메모리 캐시 — 서버 시작 시 로드, 검색 시 DB 접근 불필요
 _corps_cache: List[Dict] = []
+_corps_by_name: Dict[str, Dict] = {}
+
+
+def _rebuild_corp_maps() -> None:
+    _corps_by_name.clear()
+    for corp in _corps_cache:
+        name = corp.get("corp_name", "")
+        if name:
+            _corps_by_name[name] = corp
+
+
+def get_corp_by_name(corp_name: str) -> Dict | None:
+    if not corp_name:
+        return None
+    return _corps_by_name.get(corp_name)
 
 
 async def download_corp_codes(api_key: str) -> List[Dict]:
@@ -64,6 +79,7 @@ async def download_corp_codes(api_key: str) -> List[Dict]:
 
     _corps_cache.clear()
     _corps_cache.extend(corps)
+    _rebuild_corp_maps()
     logger.info("In-memory corps cache updated: %d items", len(corps))
 
     return corps
@@ -79,6 +95,7 @@ async def load_cached_corps() -> List[Dict]:
     if corps:
         _corps_cache.clear()
         _corps_cache.extend(corps)
+        _rebuild_corp_maps()
         logger.info("In-memory corps cache loaded: %d items", len(corps))
 
     return corps

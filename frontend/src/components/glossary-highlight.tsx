@@ -8,32 +8,31 @@ interface Segment {
   text: string;
 }
 
+const TERM_REGEX = new RegExp(
+  `(${SORTED_GLOSSARY.map(({ term }) => term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`,
+  "g",
+);
+
 function segmentText(text: string): Segment[] {
+  if (!text) return [];
+
   const segments: Segment[] = [];
-  let remaining = text;
+  let lastIndex = 0;
+  TERM_REGEX.lastIndex = 0;
 
-  while (remaining.length > 0) {
-    let earliestIdx = remaining.length;
-    let matchedTerm = "";
-
-    for (const { term } of SORTED_GLOSSARY) {
-      const idx = remaining.indexOf(term);
-      if (idx !== -1 && idx < earliestIdx) {
-        earliestIdx = idx;
-        matchedTerm = term;
-      }
+  let match: RegExpExecArray | null;
+  while ((match = TERM_REGEX.exec(text)) !== null) {
+    const idx = match.index;
+    const term = match[0];
+    if (idx > lastIndex) {
+      segments.push({ type: "plain", text: text.slice(lastIndex, idx) });
     }
+    segments.push({ type: "term", text: term });
+    lastIndex = idx + term.length;
+  }
 
-    if (!matchedTerm) {
-      segments.push({ type: "plain", text: remaining });
-      break;
-    }
-
-    if (earliestIdx > 0) {
-      segments.push({ type: "plain", text: remaining.slice(0, earliestIdx) });
-    }
-    segments.push({ type: "term", text: matchedTerm });
-    remaining = remaining.slice(earliestIdx + matchedTerm.length);
+  if (lastIndex < text.length) {
+    segments.push({ type: "plain", text: text.slice(lastIndex) });
   }
 
   return segments;

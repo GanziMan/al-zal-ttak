@@ -68,6 +68,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
   const handleSelect = (corp: Corp) => {
     router.push(`/disclosures?corp_code=${corp.corp_code}&corp_name=${encodeURIComponent(corp.corp_name)}`);
     onClose();
+    window.scrollTo(0, 0);
   };
 
   if (!open) return null;

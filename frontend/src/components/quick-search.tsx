@@ -65,6 +65,7 @@ export function QuickSearch() {
     setQuery("");
     setOpen(false);
     setFocused(false);
+    window.scrollTo(0, 0);
   };
 
   const handleClear = () => {
@@ -103,7 +104,7 @@ export function QuickSearch() {
         )}
       </div>
       {open && results.length > 0 && (
-        <div className="absolute z-50 mt-2 w-64 glass-card rounded-xl overflow-hidden shadow-xl border border-border/50">
+        <div className="absolute z-50 mt-2 w-full min-w-[16rem] glass-card rounded-xl overflow-hidden shadow-xl border border-border/50">
           <div className="max-h-80 overflow-y-auto">
             {results.slice(0, 8).map((corp) => (
               <button
