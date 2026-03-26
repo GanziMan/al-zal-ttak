@@ -4,7 +4,7 @@ export const metadata: Metadata = {
   title: "공시 피드",
   description: "상장기업의 최신 공시(기업 공개 보고서)를 AI가 분석한 결과를 확인하세요. 호재/악재 분류, 중요도 점수, 핵심 요약을 제공합니다.",
   openGraph: {
-    title: "공시 피드 | 알공딱",
+    title: "공시 피드 | 공시딱",
     description: "상장기업의 최신 공시(기업 공개 보고서)를 AI가 분석한 결과를 확인하세요.",
   },
 };

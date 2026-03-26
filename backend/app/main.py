@@ -204,7 +204,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="알공딱 - AI 금융 에이전트",
+    title="공시딱 - AI 금융 에이전트",
     description="공시와 뉴스를 필터링해주는 AI 에이전트 서비스",
     version="0.3.0",
     lifespan=lifespan,

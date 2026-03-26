@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "알공딱 - AI 공시 분석",
-    short_name: "알공딱",
+    name: "공시딱 - AI 공시 분석",
+    short_name: "공시딱",
     description:
       "DART 공시를 AI가 자동으로 분석하고 호재/악재를 판별해드립니다.",
     start_url: "/",

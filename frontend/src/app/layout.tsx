@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 const SITE_URL = "https://al-gong-ttak.vercel.app";
-const SITE_NAME = "알공딱";
-const SITE_TITLE = "알공딱 | 공시, 알아서 공시 딱";
+const SITE_NAME = "공시딱";
+const SITE_TITLE = "공시딱 | 공시, 알아서 공시 딱";
 const SITE_DESC = "DART 공시를 AI가 자동으로 분석하고 호재/악재를 판별해드립니다. 관심종목 추적, 오늘의 브리핑까지.";
 
 export const metadata: Metadata = {
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   description: SITE_DESC,
   keywords: [
     "공시 분석", "DART", "AI 공시", "주식 공시", "호재 악재",
-    "한국 주식", "공시 알림", "알공딱", "관심종목", "오늘의 브리핑",
+    "한국 주식", "공시 알림", "공시딱", "관심종목", "오늘의 브리핑",
     "공시 필터링", "투자 정보", "금융 AI",
   ],
   authors: [{ name: SITE_NAME }],
@@ -104,8 +104,8 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebApplication",
-              name: "알공딱",
-              alternateName: "ALZALTTAK",
+              name: "공시딱",
+              alternateName: "GONGSITTAK",
               url: "https://al-gong-ttak.vercel.app",
               description: "DART 공시를 AI가 자동으로 분석하고 호재/악재를 판별해드립니다.",
               applicationCategory: "FinanceApplication",
@@ -139,7 +139,7 @@ export default function RootLayout({
           </main>
           <footer className="hidden sm:block border-t border-border py-4 text-center">
             <p className="text-[11px] text-muted-foreground/50">
-              알공딱 &middot; AI 공시 분석 &middot; DART 기반
+              공시딱 &middot; AI 공시 분석 &middot; DART 기반
             </p>
           </footer>
         </AuthProvider>

@@ -24,7 +24,7 @@ export default function LoginPage() {
     <div className="flex min-h-[60vh] items-center justify-center">
       <div className="w-full max-w-sm space-y-8 text-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">알공딱</h1>
+          <h1 className="text-3xl font-bold tracking-tight">공시딱</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             AI 기반 공시 분석 서비스
           </p>
