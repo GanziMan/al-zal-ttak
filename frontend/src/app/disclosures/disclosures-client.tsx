@@ -8,6 +8,7 @@ import { DisclosureFilters } from "@/components/disclosure-filters";
 import { DisclosureCard } from "@/components/disclosure-card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PullToRefresh } from "@/components/pull-to-refresh";
 import { api, fetchWithRevalidate, getCached, Bookmark, Disclosure } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
 
@@ -205,8 +206,14 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
     ? disclosures.find((d) => d.corp_code === corpCode)?.corp_name ?? null
     : null;
 
+  const handleRefresh = async () => {
+    await fetchDisclosures(true);
+    toast.success("새로고침 완료");
+  };
+
   return (
-    <div className="space-y-6">
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           {corpCode ? (
@@ -327,6 +334,7 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
         </p>
       )}
     </div>
+    </PullToRefresh>
   );
 }
 

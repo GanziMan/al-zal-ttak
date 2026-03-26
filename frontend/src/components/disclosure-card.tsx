@@ -79,13 +79,13 @@ export function DisclosureCard({ disclosure, isBookmarked, onToggleBookmark }: D
                   e.stopPropagation();
                   onToggleBookmark(disclosure);
                 }}
-                className="p-1 rounded-md hover:bg-accent transition-colors"
+                className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-accent active:scale-95 transition-all touch-manipulation"
                 aria-label={isBookmarked ? "북마크 해제" : "북마크"}
               >
                 {isBookmarked ? (
-                  <BookmarkCheck className="h-4 w-4 text-primary" />
+                  <BookmarkCheck className="h-5 w-5 text-primary" />
                 ) : (
-                  <Bookmark className="h-4 w-4 text-muted-foreground/50" />
+                  <Bookmark className="h-5 w-5 text-muted-foreground/50" />
                 )}
               </button>
             )}
@@ -200,10 +200,10 @@ export function DisclosureCard({ disclosure, isBookmarked, onToggleBookmark }: D
             )}
 
             <button
-              className="mt-2.5 min-h-[44px] flex items-center text-[11px] font-semibold text-primary/70 hover:text-primary transition-colors"
+              className="mt-2.5 min-h-[44px] w-full flex items-center justify-center gap-1 text-[11px] font-semibold text-primary/70 hover:text-primary hover:bg-primary/5 active:scale-98 rounded-lg transition-all touch-manipulation"
               onClick={() => setExpanded(!expanded)}
             >
-              {expanded ? "분석 숨기기" : "분석 보기"}
+              <span>{expanded ? "분석 숨기기 ▲" : "분석 보기 ▼"}</span>
             </button>
           </div>
         ) : (

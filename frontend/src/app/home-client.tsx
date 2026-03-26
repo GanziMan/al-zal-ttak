@@ -11,30 +11,38 @@ import { BookmarksSection } from "@/components/bookmarks-section";
 import { DailyBriefing } from "@/components/daily-briefing";
 import { Landing } from "@/components/landing";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PullToRefresh } from "@/components/pull-to-refresh";
 import { api, fetchWithRevalidate, getCached, DashboardSummary, Disclosure } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
+import { toast } from "sonner";
 
 function Dashboard() {
   const [data, setData] = useState<DashboardSummary | null>(() => getCached<DashboardSummary>("/api/dashboard/summary"));
   const [loading, setLoading] = useState(() => !getCached("/api/dashboard/summary"));
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const cached = await fetchWithRevalidate<DashboardSummary>(
-          "/api/dashboard/summary",
-          (fresh) => setData(fresh),
-        );
-        if (cached) setData(cached);
-      } catch {
-        setError("대시보드 데이터를 불러올 수 없습니다. 백엔드 서버를 확인하세요.");
-      } finally {
-        setLoading(false);
-      }
+  const fetchData = async () => {
+    try {
+      const cached = await fetchWithRevalidate<DashboardSummary>(
+        "/api/dashboard/summary",
+        (fresh) => setData(fresh),
+      );
+      if (cached) setData(cached);
+    } catch {
+      setError("대시보드 데이터를 불러올 수 없습니다. 백엔드 서버를 확인하세요.");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     fetchData();
   }, []);
+
+  const handleRefresh = async () => {
+    await fetchData();
+    toast.success("새로고침 완료");
+  };
 
   if (loading) {
     return (
@@ -57,11 +65,12 @@ function Dashboard() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">대시보드</h1>
-        <p className="text-[12px] text-muted-foreground mt-0.5">실시간 공시 분석 현황</p>
-      </div>
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">대시보드</h1>
+          <p className="text-[12px] text-muted-foreground mt-0.5">실시간 공시 분석 현황</p>
+        </div>
 
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[12px] text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
@@ -89,6 +98,7 @@ function Dashboard() {
 
       <BookmarksSection />
     </div>
+    </PullToRefresh>
   );
 }
 

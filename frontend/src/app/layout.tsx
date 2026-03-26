@@ -170,7 +170,12 @@ export default function RootLayout({
         <SwRegister />
         <AuthProvider>
           <Nav />
-          <Toaster position="bottom-right" />
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              className: "mt-16 sm:mt-4",
+            }}
+          />
           <main className="flex-1 px-4 py-6 pb-20 sm:px-6 sm:pb-6 lg:px-8">
             <div className="mx-auto max-w-7xl">{children}</div>
           </main>
