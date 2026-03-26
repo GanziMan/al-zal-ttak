@@ -178,7 +178,14 @@ function DisclosureCardInner({
                 const next = !expanded;
                 setExpanded(next);
                 if (next) {
-                  setTimeout(() => cardRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 100);
+                  setTimeout(
+                    () =>
+                      cardRef.current?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "nearest",
+                      }),
+                    100,
+                  );
                 }
               }}
               onKeyDown={(e) => {
@@ -187,7 +194,14 @@ function DisclosureCardInner({
                   const next = !expanded;
                   setExpanded(next);
                   if (next) {
-                    setTimeout(() => cardRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 100);
+                    setTimeout(
+                      () =>
+                        cardRef.current?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "nearest",
+                        }),
+                      100,
+                    );
                   }
                 }
               }}
@@ -200,7 +214,9 @@ function DisclosureCardInner({
           <div className="mt-2.5 space-y-2">
             <div className="flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-[11px] text-muted-foreground/60">AI 분석 중...</span>
+              <span className="text-[11px] text-muted-foreground/60">
+                AI 분석 중...
+              </span>
             </div>
             <div className="h-4 w-full bg-muted rounded animate-pulse" />
             <div className="h-4 w-3/4 bg-muted rounded animate-pulse" />
