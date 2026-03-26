@@ -154,7 +154,7 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
         // 폴링 실패는 무시
       }
     }
-  }, [days, category, minScore, isLoggedIn, initialDisclosures]);
+  }, [days, category, minScore, corpCode, isLoggedIn, initialDisclosures]);
 
   useEffect(() => {
     if (corpCode) setLoading(true);
