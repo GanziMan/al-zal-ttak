@@ -57,12 +57,14 @@ function DisclosuresContent({ initialDisclosures }: DisclosuresClientProps) {
 
   const updateURL = useCallback((newCat: string, newDays: number, newScore: number) => {
     const params = new URLSearchParams();
+    if (corpCode) params.set("corp_code", corpCode);
+    if (corpNameParam) params.set("corp_name", corpNameParam);
     if (newCat !== "all") params.set("category", newCat);
     if (newDays !== 7) params.set("days", String(newDays));
     if (newScore > 0) params.set("min_score", String(newScore));
     const qs = params.toString();
     router.replace(qs ? `/disclosures?${qs}` : "/disclosures");
-  }, [router]);
+  }, [router, corpCode, corpNameParam]);
 
   const handleCategoryChange = useCallback((v: string) => {
     setCategory(v);
