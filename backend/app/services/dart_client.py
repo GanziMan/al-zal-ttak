@@ -121,9 +121,10 @@ class DartClient:
             logger.warning("Failed to download document for %s", rcept_no)
             return ""
 
-        # ZIP이 아니면 빈 문자열 (에러 응답은 JSON)
+        # DART는 ZIP 본문을 application/x-msdownload 로도 반환한다.
         content_type = resp.headers.get("content-type", "")
-        if "zip" not in content_type and "octet" not in content_type:
+        is_zip_bytes = resp.content.startswith(b"PK")
+        if not is_zip_bytes and "zip" not in content_type and "octet" not in content_type:
             logger.warning("Document response is not ZIP for %s: %s", rcept_no, content_type)
             return ""
 
