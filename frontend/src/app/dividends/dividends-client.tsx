@@ -34,11 +34,16 @@ function filterDividendEvents(events: DividendCalendarEvent[], filter: DividendF
 
 export function DividendsClient({ initialPublicEvents }: DividendsClientProps) {
   const { isLoggedIn, isLoading } = useAuth();
-  const cachedOverview = getCached<{ watchlist: WatchlistItem[]; dividend_events: DividendCalendarEvent[] }>(OVERVIEW_CACHE_KEY);
+  const initialCachedOverview =
+    typeof window !== "undefined"
+      ? getCached<{ watchlist: WatchlistItem[]; dividend_events: DividendCalendarEvent[] }>(OVERVIEW_CACHE_KEY)
+      : null;
 
-  const [watchlistEvents, setWatchlistEvents] = useState<DividendCalendarEvent[]>(cachedOverview?.dividend_events ?? []);
-  const [watchlist, setWatchlist] = useState<WatchlistItem[]>(cachedOverview?.watchlist ?? []);
-  const [loading, setLoading] = useState(isLoggedIn && !cachedOverview);
+  const [watchlistEvents, setWatchlistEvents] = useState<DividendCalendarEvent[]>(
+    initialCachedOverview?.dividend_events ?? [],
+  );
+  const [watchlist, setWatchlist] = useState<WatchlistItem[]>(initialCachedOverview?.watchlist ?? []);
+  const [loading, setLoading] = useState(isLoggedIn && !initialCachedOverview);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState<DividendFilter>("all");
 
@@ -47,6 +52,10 @@ export function DividendsClient({ initialPublicEvents }: DividendsClientProps) {
       setLoading(false);
       return;
     }
+
+    const cachedOverview = getCached<{ watchlist: WatchlistItem[]; dividend_events: DividendCalendarEvent[] }>(
+      OVERVIEW_CACHE_KEY,
+    );
 
     if (cachedOverview && isFresh(OVERVIEW_CACHE_KEY)) {
       setWatchlistEvents(cachedOverview.dividend_events);
@@ -77,7 +86,7 @@ export function DividendsClient({ initialPublicEvents }: DividendsClientProps) {
     return () => {
       cancelled = true;
     };
-  }, [cachedOverview, isLoading, isLoggedIn]);
+  }, [isLoading, isLoggedIn]);
 
   const filteredWatchlistEvents = useMemo(
     () => filterDividendEvents(watchlistEvents, filter),
