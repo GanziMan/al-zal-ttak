@@ -264,6 +264,71 @@ export function Landing({
         </Link>
       </section>
 
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold">배당 기준일 미리 보기</h2>
+            <p className="text-[12px] text-muted-foreground mt-0.5">
+              인기 종목 기준 최근 배당 기준일과 배당 흐름입니다
+            </p>
+          </div>
+          <Link
+            href="/login"
+            className="text-xs text-primary hover:underline">
+            로그인하고 내 종목 보기 →
+          </Link>
+        </div>
+
+        {dividendEvents.length > 0 ? (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {dividendEvents.map((event) => (
+              <Link
+                key={event.corp_code}
+                href={`/company/${event.corp_code}`}
+                className="glass-card rounded-2xl p-4 transition-colors hover:bg-accent/40"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-bold truncate">{event.corp_name}</p>
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      {event.last_confirmed_record_date
+                        ? `최근 배당 기준일 ${event.last_confirmed_record_date}`
+                        : event.reference_date
+                          ? `최근 결산 ${event.reference_date}`
+                          : "배당 기준일 공시 확인 필요"}
+                    </p>
+                  </div>
+                  {event.last_confirmed_record_date ? (
+                    <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-[10px] font-semibold text-emerald-600">
+                      확인됨
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary">
+                      확인 필요
+                    </span>
+                  )}
+                </div>
+                <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
+                  <span>DPS {event.recent_dps > 0 ? event.recent_dps.toLocaleString() : "-"}</span>
+                  <span>
+                    {event.change_vs_prev_year === "increase" && "증액"}
+                    {event.change_vs_prev_year === "flat" && "동결"}
+                    {event.change_vs_prev_year === "decrease" && "감액"}
+                    {event.change_vs_prev_year === "no_dividend" && "무배당"}
+                    {event.change_vs_prev_year === "new" && "신규"}
+                    {event.change_vs_prev_year === "unknown" && "변화 미확인"}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground text-center py-8">
+            배당 일정 데이터가 아직 준비되지 않았습니다
+          </p>
+        )}
+      </section>
+
       {/* 최신 AI 분석 공시 */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
@@ -289,61 +354,6 @@ export function Landing({
         ) : (
           <p className="text-sm text-muted-foreground text-center py-8">
             공시 데이터가 없습니다
-          </p>
-        )}
-      </section>
-
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-bold">다가오는 배당 일정</h2>
-            <p className="text-[12px] text-muted-foreground mt-0.5">
-              인기 종목 기준 예상 배당 기준일입니다
-            </p>
-          </div>
-          <Link
-            href="/login"
-            className="text-xs text-primary hover:underline">
-            로그인하고 내 종목 보기 →
-          </Link>
-        </div>
-
-        {dividendEvents.length > 0 ? (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {dividendEvents.map((event) => (
-              <Link
-                key={event.corp_code}
-                href={`/company/${event.corp_code}`}
-                className="glass-card rounded-2xl p-4 transition-colors hover:bg-accent/40"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-[13px] font-bold truncate">{event.corp_name}</p>
-                    <p className="text-[11px] text-muted-foreground mt-1">
-                      {event.reference_date ? `최근 결산 ${event.reference_date}` : "배당 기준일 공시 확인 필요"}
-                    </p>
-                  </div>
-                  <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary">
-                    확인 필요
-                  </span>
-                </div>
-                <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
-                  <span>DPS {event.recent_dps > 0 ? event.recent_dps.toLocaleString() : "-"}</span>
-                  <span>
-                    {event.change_vs_prev_year === "increase" && "증액"}
-                    {event.change_vs_prev_year === "flat" && "동결"}
-                    {event.change_vs_prev_year === "decrease" && "감액"}
-                    {event.change_vs_prev_year === "no_dividend" && "무배당"}
-                    {event.change_vs_prev_year === "new" && "신규"}
-                    {event.change_vs_prev_year === "unknown" && "변화 미확인"}
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground text-center py-8">
-            배당 일정 데이터가 아직 준비되지 않았습니다
           </p>
         )}
       </section>

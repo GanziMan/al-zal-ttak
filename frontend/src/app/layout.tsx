@@ -21,9 +21,9 @@ const geistMono = Geist_Mono({
 
 const SITE_URL = "https://gongsittak.com";
 const SITE_NAME = "공시딱";
-const SITE_TITLE = "공시딱 | 알아서 공시 딱";
+const SITE_TITLE = "공시딱 | AI 공시 분석과 배당 기준일";
 const SITE_DESC =
-  "DART 공시를 AI가 자동으로 분석하고 호재/악재를 판별해드립니다. 관심종목 추적, 오늘의 브리핑까지.";
+  "DART 공시를 AI로 빠르게 요약하고, 종목별 배당 기준일 이력과 재무 흐름까지 한눈에 확인하는 한국 주식 분석 서비스입니다.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -44,6 +44,10 @@ export const metadata: Metadata = {
     "관심종목",
     "오늘의 브리핑",
     "공시 필터링",
+    "배당 기준일",
+    "배당 캘린더",
+    "배당 이력",
+    "배당일",
     "투자 정보",
     "금융 AI",
     "전자공시",
@@ -147,7 +151,7 @@ export default function RootLayout({
               alternateName: "GONGSITTAK",
               url: "https://gongsittak.com",
               description:
-                "DART 공시를 AI가 자동으로 분석하고 호재/악재를 판별해드립니다.",
+                "DART 공시 요약, 종목별 배당 기준일 이력, 재무제표와 주가 흐름을 한 화면에서 확인하는 한국 주식 분석 서비스",
               applicationCategory: "FinanceApplication",
               operatingSystem: "Web",
               offers: {
