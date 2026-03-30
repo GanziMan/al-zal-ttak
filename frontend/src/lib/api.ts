@@ -279,6 +279,13 @@ export const api = {
     const qs = years ? `?years=${years}` : "";
     return request<{ events: DividendCalendarEvent[] }>(`/api/dividends/calendar${qs}`);
   },
+  getPublicDividendPreview: (params?: { limit?: number; years?: number }) => {
+    const q = new URLSearchParams();
+    if (params?.limit) q.set("limit", String(params.limit));
+    if (params?.years) q.set("years", String(params.years));
+    const qs = q.toString();
+    return request<{ events: DividendCalendarEvent[] }>(`/api/dividends/public/preview${qs ? `?${qs}` : ""}`);
+  },
   getCompanyDividendCalendar: (corpCode: string, years?: number) => {
     const qs = years ? `?years=${years}` : "";
     return request<{ event: DividendCalendarEvent | null }>(`/api/dividends/calendar/${corpCode}${qs}`);

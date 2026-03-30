@@ -11,7 +11,7 @@ import {
   Shield,
   Star,
 } from "lucide-react";
-import { api, DashboardSummary, DisclosurePreview } from "@/lib/api";
+import { api, DashboardSummary, DisclosurePreview, DividendCalendarEvent } from "@/lib/api";
 import { DisclosureCard } from "@/components/disclosure-card";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -56,21 +56,27 @@ const features = [
 interface LandingProps {
   summary?: DashboardSummary | null;
   disclosures?: DisclosurePreview[];
+  dividendEvents?: DividendCalendarEvent[];
 }
 
 export function Landing({
   summary: initialSummary,
   disclosures: initialDisclosures,
+  dividendEvents: initialDividendEvents,
 }: LandingProps = {}) {
   const hasServerData =
     initialSummary != null ||
-    (initialDisclosures && initialDisclosures.length > 0);
+    (initialDisclosures && initialDisclosures.length > 0) ||
+    (initialDividendEvents && initialDividendEvents.length > 0);
   const shouldRefetch = initialSummary == null;
   const [summary, setSummary] = useState<DashboardSummary | null>(
     initialSummary ?? null,
   );
   const [disclosures, setDisclosures] = useState<DisclosurePreview[]>(
     initialDisclosures ?? [],
+  );
+  const [dividendEvents, setDividendEvents] = useState<DividendCalendarEvent[]>(
+    initialDividendEvents ?? [],
   );
   const [loading, setLoading] = useState(!hasServerData);
   const pollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -99,9 +105,10 @@ export function Landing({
     if (!shouldRefetch) return;
     async function load() {
       try {
-        const [dashData, discData] = await Promise.all([
+        const [dashData, discData, dividendData] = await Promise.all([
           api.getPublicDashboard(),
           api.getPublicDisclosurePreview({ days: 3, limit: 10 }),
+          api.getPublicDividendPreview({ limit: 6 }),
         ]);
         setSummary({
           ...dashData,
@@ -114,6 +121,7 @@ export function Landing({
           ).length,
         });
         applyPublicData(discData);
+        setDividendEvents(dividendData.events);
       } catch {
         // silent
       } finally {
@@ -281,6 +289,61 @@ export function Landing({
         ) : (
           <p className="text-sm text-muted-foreground text-center py-8">
             공시 데이터가 없습니다
+          </p>
+        )}
+      </section>
+
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold">다가오는 배당 일정</h2>
+            <p className="text-[12px] text-muted-foreground mt-0.5">
+              인기 종목 기준 예상 배당 기준일입니다
+            </p>
+          </div>
+          <Link
+            href="/login"
+            className="text-xs text-primary hover:underline">
+            로그인하고 내 종목 보기 →
+          </Link>
+        </div>
+
+        {dividendEvents.length > 0 ? (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {dividendEvents.map((event) => (
+              <Link
+                key={event.corp_code}
+                href={`/company/${event.corp_code}`}
+                className="glass-card rounded-2xl p-4 transition-colors hover:bg-accent/40"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-bold truncate">{event.corp_name}</p>
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      {event.reference_date ? `최근 결산 ${event.reference_date}` : "배당 기준일 공시 확인 필요"}
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary">
+                    확인 필요
+                  </span>
+                </div>
+                <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
+                  <span>DPS {event.recent_dps > 0 ? event.recent_dps.toLocaleString() : "-"}</span>
+                  <span>
+                    {event.change_vs_prev_year === "increase" && "증액"}
+                    {event.change_vs_prev_year === "flat" && "동결"}
+                    {event.change_vs_prev_year === "decrease" && "감액"}
+                    {event.change_vs_prev_year === "no_dividend" && "무배당"}
+                    {event.change_vs_prev_year === "new" && "신규"}
+                    {event.change_vs_prev_year === "unknown" && "변화 미확인"}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground text-center py-8">
+            배당 일정 데이터가 아직 준비되지 않았습니다
           </p>
         )}
       </section>

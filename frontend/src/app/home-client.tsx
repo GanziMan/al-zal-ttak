@@ -17,6 +17,7 @@ import {
   getCached,
   DashboardSummary,
   DisclosurePreview,
+  DividendCalendarEvent,
   type DailyBriefing as DailyBriefingData,
   type HistoryDataPoint,
 } from "@/lib/api";
@@ -118,9 +119,10 @@ function Dashboard() {
 interface HomeClientProps {
   summary?: DashboardSummary | null;
   disclosures?: DisclosurePreview[];
+  dividendEvents?: DividendCalendarEvent[];
 }
 
-export function HomeClient({ summary, disclosures }: HomeClientProps = {}) {
+export function HomeClient({ summary, disclosures, dividendEvents }: HomeClientProps = {}) {
   const { isLoggedIn, isLoading } = useAuth();
 
   // 로딩 중이더라도 SSG 데이터가 있으면 Landing을 바로 보여줌 (비로그인 유저 UX)
@@ -128,7 +130,7 @@ export function HomeClient({ summary, disclosures }: HomeClientProps = {}) {
   if (isLoading) {
     // SSG 데이터가 있으면 Landing을 먼저 표시 (hydration flicker 방지)
     if (summary || (disclosures && disclosures.length > 0)) {
-      return <Landing summary={summary} disclosures={disclosures} />;
+      return <Landing summary={summary} disclosures={disclosures} dividendEvents={dividendEvents} />;
     }
     return (
       <div className="space-y-6">
@@ -142,7 +144,7 @@ export function HomeClient({ summary, disclosures }: HomeClientProps = {}) {
   }
 
   if (!isLoggedIn) {
-    return <Landing summary={summary} disclosures={disclosures} />;
+    return <Landing summary={summary} disclosures={disclosures} dividendEvents={dividendEvents} />;
   }
 
   return <Dashboard />;

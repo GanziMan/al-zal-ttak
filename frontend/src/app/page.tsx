@@ -7,5 +7,11 @@ export const revalidate = 300;
 export default async function HomePage() {
   const data = await getPublicLandingData();
 
-  return <HomeClient summary={data?.summary ?? null} disclosures={data?.disclosures ?? []} />;
+  return (
+    <HomeClient
+      summary={data?.summary ?? null}
+      disclosures={data?.disclosures ?? []}
+      dividendEvents={data?.dividendEvents ?? []}
+    />
+  );
 }

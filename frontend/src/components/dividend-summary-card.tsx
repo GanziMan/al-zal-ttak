@@ -59,7 +59,7 @@ export function DividendSummaryCard({ event, corpName, stockCode }: DividendSumm
         </div>
         <div className="flex items-center gap-2">
           <span className="rounded-full bg-sky-500/10 px-2 py-0.5 text-[10px] font-medium text-sky-700 dark:text-sky-300">
-            {statusLabel}
+            {statusLabel === "예상" ? statusLabel : "확인 필요"}
           </span>
           <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${change.className}`}>
             {change.label}
@@ -69,8 +69,10 @@ export function DividendSummaryCard({ event, corpName, stockCode }: DividendSumm
 
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         <div className="rounded-xl border border-border/30 bg-background/60 px-3 py-3">
-          <p className="text-[11px] text-muted-foreground/60">다음 예상 기준일</p>
-          <p className="text-[15px] font-semibold text-foreground mt-1">{formatDate(event.next_event_date)}</p>
+          <p className="text-[11px] text-muted-foreground/60">배당 기준일</p>
+          <p className="text-[15px] font-semibold text-foreground mt-1">
+            {event.next_event_date ? formatDate(event.next_event_date) : "공시 확인 필요"}
+          </p>
         </div>
         <div className="rounded-xl border border-border/30 bg-background/60 px-3 py-3">
           <p className="text-[11px] text-muted-foreground/60">최근 주당배당금</p>
@@ -80,7 +82,7 @@ export function DividendSummaryCard({ event, corpName, stockCode }: DividendSumm
           </p>
         </div>
         <div className="rounded-xl border border-border/30 bg-background/60 px-3 py-3">
-          <p className="text-[11px] text-muted-foreground/60">직전 기준일</p>
+          <p className="text-[11px] text-muted-foreground/60">최근 결산기준일</p>
           <p className="text-[15px] font-semibold text-foreground mt-1">{formatDate(event.reference_date)}</p>
         </div>
       </div>

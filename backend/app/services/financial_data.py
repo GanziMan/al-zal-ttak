@@ -215,21 +215,6 @@ def _compare_dividend(latest: dict, previous: dict | None) -> str:
     return "flat"
 
 
-def _estimate_next_record_date(record_date: str) -> str:
-    if not record_date:
-        return ""
-    try:
-        dt = datetime.strptime(record_date, "%Y-%m-%d")
-    except ValueError:
-        return ""
-
-    now = datetime.now()
-    candidate = dt.replace(year=now.year)
-    if candidate.date() < now.date():
-        candidate = candidate.replace(year=now.year + 1)
-    return candidate.strftime("%Y-%m-%d")
-
-
 def build_dividend_calendar_event(
     corp_code: str,
     corp_name: str,
@@ -248,15 +233,14 @@ def build_dividend_calendar_event(
 
     latest = summaries[0]
     previous = summaries[1] if len(summaries) > 1 else None
-    next_record_date = _estimate_next_record_date(latest.get("record_date", ""))
 
     return {
         "corp_code": corp_code,
         "corp_name": corp_name,
         "stock_code": stock_code,
-        "status": "expected" if next_record_date else "unknown",
+        "status": "unknown",
         "event_type": "record_date",
-        "next_event_date": next_record_date,
+        "next_event_date": "",
         "recent_dps": latest.get("dps", 0),
         "recent_dps_raw": latest.get("dps_raw", ""),
         "yield_pct": latest.get("yield_pct"),
@@ -264,7 +248,7 @@ def build_dividend_calendar_event(
         "change_vs_prev_year": _compare_dividend(latest, previous),
         "source_year": latest.get("year", ""),
         "reference_date": latest.get("record_date", ""),
-        "note": "최근 사업보고서 결산기준일을 바탕으로 계산한 예상 일정" if next_record_date else "배당 기준일 정보가 부족해 예상 일정을 계산하지 못했습니다.",
+        "note": "OpenDART 배당 데이터에서는 결산기준일만 확인되어, 실제 배당 기준일은 별도 공시 확인이 필요합니다.",
     }
 
 

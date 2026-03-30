@@ -1,5 +1,5 @@
 import { cache } from "react";
-import type { DashboardSummary, Disclosure, DisclosurePreview } from "@/lib/api";
+import type { DashboardSummary, Disclosure, DisclosurePreview, DividendCalendarEvent } from "@/lib/api";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -30,10 +30,12 @@ async function fetchJson<T>(path: string, revalidate: number): Promise<T | null>
 export const getPublicLandingData = cache(async (): Promise<{
   summary: DashboardSummary | null;
   disclosures: DisclosurePreview[];
+  dividendEvents: DividendCalendarEvent[];
 } | null> => {
-  const [summary, disclosuresData] = await Promise.all([
+  const [summary, disclosuresData, dividendData] = await Promise.all([
     fetchJson<DashboardSummary>("/api/dashboard/public", 300),
     fetchJson<PublicDisclosurePreviewResponse>("/api/disclosures/public/preview?days=3&limit=10", 300),
+    fetchJson<{ events: DividendCalendarEvent[] }>("/api/dividends/public/preview?limit=6", 300),
   ]);
 
   if (!summary && !disclosuresData) {
@@ -41,6 +43,7 @@ export const getPublicLandingData = cache(async (): Promise<{
   }
 
   const disclosures = disclosuresData?.disclosures.slice(0, 10) ?? [];
+  const dividendEvents = dividendData?.events ?? [];
 
   if (summary && disclosuresData) {
     return {
@@ -51,12 +54,14 @@ export const getPublicLandingData = cache(async (): Promise<{
         bearish: disclosuresData.disclosures.filter((d) => d.analysis?.category === "악재").length,
       },
       disclosures,
+      dividendEvents,
     };
   }
 
   return {
     summary: summary ?? null,
     disclosures,
+    dividendEvents,
   };
 });
 

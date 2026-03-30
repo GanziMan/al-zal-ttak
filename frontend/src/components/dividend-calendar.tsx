@@ -33,7 +33,7 @@ export function DividendCalendar({ events }: DividendCalendarProps) {
           <div>
             <h2 className="text-[13px] font-semibold text-foreground/80">다가오는 배당 일정</h2>
             <p className="text-[11px] text-muted-foreground/60 mt-0.5">
-              최근 사업보고서 기준으로 계산한 예상 결산기준일입니다
+              배당 흐름은 보여주되, 실제 배당 기준일은 공시 확인이 필요합니다
             </p>
           </div>
         </div>
@@ -49,7 +49,7 @@ export function DividendCalendar({ events }: DividendCalendarProps) {
           <div className="space-y-3">
             {events.map((event) => {
               const change = CHANGE_META[event.change_vs_prev_year] ?? CHANGE_META.unknown;
-              const statusLabel = event.status === "expected" ? "예상" : "미정";
+              const statusLabel = event.status === "expected" ? "예상" : "확인 필요";
 
               return (
                 <Link
@@ -71,14 +71,14 @@ export function DividendCalendar({ events }: DividendCalendarProps) {
                       </div>
                       <p className="text-[11px] text-muted-foreground/70 mt-1">
                         기준 연도 {event.source_year}
-                        {event.reference_date ? ` · 직전 결산기준일 ${formatDate(event.reference_date)}` : ""}
+                        {event.reference_date ? ` · 최근 결산기준일 ${formatDate(event.reference_date)}` : ""}
                       </p>
                     </div>
 
                     <div className="text-right shrink-0">
-                      <p className="text-[11px] text-muted-foreground/60">다음 예상 기준일</p>
+                      <p className="text-[11px] text-muted-foreground/60">배당 기준일</p>
                       <p className="text-[13px] font-semibold text-foreground mt-0.5">
-                        {formatDate(event.next_event_date)}
+                        {event.next_event_date ? formatDate(event.next_event_date) : "공시 확인 필요"}
                       </p>
                     </div>
                   </div>
